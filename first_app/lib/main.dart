@@ -26,9 +26,21 @@ class HomeActivity extends StatelessWidget{
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Project build by Prosenjit Mondol"),
-      ),
-      body: Text("Prosenjit Mondol is a legendary grandmaster at codeforces"),
+        title: Text("Inventory"),
+        titleSpacing: 0,
+        centerTitle: true,
+        toolbarHeight: 60,
+        toolbarOpacity:1,
+        elevation: 10,
+        backgroundColor: Colors.amber,
+
+      )
+
+      //body: Text("Prosenjit Mondol is a legendary grandmaster at codeforces"),
+      // drawer: (),
+      // endDrawer:(),
+      // bottomNavigationBar:(),
+      // floatingActionButton:(),
     );
 
   }
