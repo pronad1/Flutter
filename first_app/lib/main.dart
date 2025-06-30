@@ -31,9 +31,10 @@ class HomeActivity extends StatelessWidget{
   Widget build(BuildContext context) {
 
     return Scaffold(
+
       //AppBar
       appBar: AppBar(
-        title: Text("Inventory"),
+        title: Text("Prosenjit"),
         titleSpacing: 20,
         //centerTitle: true,
         toolbarHeight: 60,
@@ -54,7 +55,7 @@ class HomeActivity extends StatelessWidget{
       //floatingActionButton:()
       floatingActionButton: FloatingActionButton(
         elevation: 10,
-        child:Icon(Icons.add),
+        child: const Icon(Icons.add),
         backgroundColor: Colors.green,
         onPressed: (){
           MySnackBar("I am in Floating Action Button",context);
@@ -84,10 +85,90 @@ class HomeActivity extends StatelessWidget{
       },
       ),
 
+      // drawer: (),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              padding: EdgeInsets.all(0),
+                child: UserAccountsDrawerHeader(
+                    decoration: BoxDecoration(color: Colors.white),
+                  accountName: Text("Prosenjit Mondol", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                  accountEmail: Text("prosenjit1156@gmail.com",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black)),
+                    currentAccountPictureSize: Size.fromRadius(35),
+                    currentAccountPicture: Image.network("https://avatars.githubusercontent.com/u/143212336?v=4"),
+                    onDetailsPressed: (){MySnackBar("This is my Profile",context);}
+                )
+            ),
+            
+            ListTile(leading: Icon(Icons.home),
+                title:Text("Home"),
+            onTap: (){
+              MySnackBar("I am in Home",context);
+            }),
+            ListTile(leading: Icon(Icons.email),
+            title: Text("Email"),
+            onTap: (){
+              MySnackBar("I am in email", context);
+            }),
+            ListTile(leading: Icon(Icons.phone),
+            title: Text("Phone"),
+            onTap: (){
+              MySnackBar("I am in Phone", context);
+            }),
+            ListTile(leading: Icon(Icons.person),
+            title: Text("Profile"),
+            onTap: (){
+              MySnackBar("I am in Profile", context);
+            })
+          ],
+        ),
+      ),
+
+      // endDrawer:(),
+      endDrawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+                padding: EdgeInsets.all(0),
+                child: UserAccountsDrawerHeader(
+                    decoration: BoxDecoration(color: Colors.white),
+                    accountName: Text("Prosenjit Mondol", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                    accountEmail: Text("prosenjit1156@gmail.com",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black)),
+                    currentAccountPictureSize: Size.fromRadius(35),
+                    currentAccountPicture: Image.network("https://avatars.githubusercontent.com/u/143212336?v=4"),
+                    onDetailsPressed: (){MySnackBar("This is my Profile",context);}
+                )
+            ),
+
+            ListTile(leading: Icon(Icons.home),
+                title:Text("Home"),
+                onTap: (){
+                  MySnackBar("I am in Home",context);
+                }),
+            ListTile(leading: Icon(Icons.email),
+                title: Text("Email"),
+                onTap: (){
+                  MySnackBar("I am in email", context);
+                }),
+            ListTile(leading: Icon(Icons.phone),
+                title: Text("Phone"),
+                onTap: (){
+                  MySnackBar("I am in Phone", context);
+                }),
+            ListTile(leading: Icon(Icons.person),
+                title: Text("Profile"),
+                onTap: (){
+                  MySnackBar("I am in Profile", context);
+                })
+          ],
+        ),
+      ),
+
 
       //body: Text("Prosenjit Mondol is a legendary grandmaster at codeforces"),
-      // drawer: (),
-      // endDrawer:(),
+
+
 
 
     );
