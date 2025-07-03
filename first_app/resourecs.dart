@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
-
+// ctrl + p for parameter
 // just main structure
+
 import 'package:flutter/material.dart';
 main(){
   runApp(const MyApp());
@@ -17,6 +16,7 @@ class MyApp extends StatelessWidget{
     );
   }
 }
+
 class HomeActivity extends StatelessWidget{
   const HomeActivity({super.key});
 
@@ -38,24 +38,8 @@ class HomeActivity extends StatelessWidget{
   }
 }
 
-main(){
-  runApp(const MyApp());
-}
-class MyApp extends StatelessWidget{
-  const MyApp({super.key});
-
-
-// ctrl + p for parameter
-
-  @override
-  Widget build(BuildContext context) {
-
-    return const MaterialApp(home:HomeActivity());
-  }
-
-}
+// all effect done around  Scaffold
 class HomeActivity extends StatelessWidget{
-  const HomeActivity({super.key});
 
   // test sms
   MySnackBar(message,context){
@@ -85,17 +69,16 @@ class HomeActivity extends StatelessWidget{
   }
   @override
   Widget build(BuildContext context) {
-
-    // ButtonStyle buttonStyle=ElevatedButton.styleFrom(
-    //   padding: EdgeInsets.all(15),
-    //   backgroundColor: Colors.blue,
-    //   foregroundColor: Colors.white,
-    //   shape: RoundedRectangleBorder(
-    //     borderRadius: BorderRadius.circular(40)
-    //   )
-    // );
-
-
+// button style
+    ButtonStyle buttonStyle=ElevatedButton.styleFrom(
+      padding: EdgeInsets.all(15),
+      backgroundColor: Colors.blue,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(40)
+      )
+    );
+    //Scaffold
     return Scaffold(
       //AppBar
       appBar: AppBar(
@@ -256,3 +239,21 @@ class HomeActivity extends StatelessWidget{
     );
   }
 }
+
+// for simple form
+ButtonStyle buttonStyle=ElevatedButton.styleFrom(
+  minimumSize: Size(double.infinity, 40),
+  backgroundColor: Colors.blue,
+);
+body: Column(
+mainAxisAlignment: MainAxisAlignment.start,
+children: [
+Padding(padding: EdgeInsets.all(20),child: TextField(decoration: InputDecoration(border:OutlineInputBorder(),labelText: 'First Name')),),
+Padding(padding: EdgeInsets.all(20),child: TextField(decoration: InputDecoration(border:OutlineInputBorder(),labelText: 'Last Name')),),
+Padding(padding: EdgeInsets.all(20),child: TextField(decoration: InputDecoration(border:OutlineInputBorder(),labelText: 'Email Address')),),
+Padding(padding: EdgeInsets.all(20),child: ElevatedButton(onPressed: (){},style: buttonStyle, child: Text("Submit"),),)
+],
+),
+
+// Dynamic list view using json array
+// for that use GestureDetector , list view builder, JSOn array
