@@ -167,20 +167,27 @@ class HomeActivity extends StatelessWidget{
 
 
       //body: Text("Prosenjit Mondol is a legendary grandmaster at codeforces"),
-      body: Container(
-        height: 250,
-        width: 250,
-        alignment: Alignment.topCenter,
-        margin: EdgeInsets.all(60),
-        padding:EdgeInsets.all(60),
+      // body: Container(
+      //   height: 250,
+      //   width: 250,
+      //   alignment: Alignment.topCenter,
+      //   margin: EdgeInsets.all(60),
+      //   padding:EdgeInsets.all(60),
+      //
+      //   decoration: BoxDecoration(
+      //     color: Colors.blue,
+      //     border: Border.all(color: Colors.black,width: 2),
+      //   ),
+      //   child: Image.network("https://avatars.githubusercontent.com/u/143212336?v=4")
+      // ),
 
-        decoration: BoxDecoration(
-          color: Colors.blue,
-          border: Border.all(color: Colors.black,width: 2),
-        ),
-        child: Image.network("https://avatars.githubusercontent.com/u/143212336?v=4")
+      body: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          TextButton(onPressed: (){MySnackBar("I am Text Button",context);}, child: Text("Text Button")),
+
+        ],
       ),
-
 
 
     );
