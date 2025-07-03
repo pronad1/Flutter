@@ -11,13 +11,29 @@ class MyApp extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        home:const HomeActivity()
+        home: HomeActivity()
     );
   }
 }
 
 class HomeActivity extends StatelessWidget{
-  const HomeActivity({super.key});
+  HomeActivity({super.key});
+
+var MyItems=[
+  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
+  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
+  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
+  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
+  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
+  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"}
+
+
+];
+
+mySnackBar(context,msg){
+  return ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +45,19 @@ class HomeActivity extends StatelessWidget{
         backgroundColor: Colors.green,
       ),
 
-
+      body: ListView.builder(
+        itemCount: MyItems.length,
+          itemBuilder: (context,index){
+          return GestureDetector(
+            onDoubleTap: (){mySnackBar(context, MyItems[index]['title']);},
+            child: Container(
+              margin: EdgeInsets.all(10),
+              height: 350,
+              child: Image.network(MyItems[index]['img']!, fit: BoxFit.fill,),
+            ),
+          );
+          },
+      )
     );
   }
 }
