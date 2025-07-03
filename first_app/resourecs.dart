@@ -1,9 +1,46 @@
 import 'package:flutter/material.dart';
 
+
+// just main structure
+import 'package:flutter/material.dart';
 main(){
   runApp(const MyApp());
 }
+class MyApp extends StatelessWidget{
+  const MyApp({super.key});
 
+// ctrl + p for parameter
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home:const HomeActivity()
+    );
+  }
+}
+class HomeActivity extends StatelessWidget{
+  const HomeActivity({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("My App"),
+      ),
+
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text("data")
+        ],
+      ),
+    );
+  }
+}
+
+main(){
+  runApp(const MyApp());
+}
 class MyApp extends StatelessWidget{
   const MyApp({super.key});
 
@@ -17,40 +54,35 @@ class MyApp extends StatelessWidget{
   }
 
 }
-
 class HomeActivity extends StatelessWidget{
   const HomeActivity({super.key});
 
   // test sms
   MySnackBar(message,context){
     return ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content:Text(message))
+        SnackBar(content:Text(message))
     );
   }
-
-
 //dialog sms
   MyAlertDialog(context){
     return showDialog(
-      context: context,
-      builder: (BuildContext context){
-        return Expanded(
-          child: AlertDialog(
-            title: Text("Alert"),
-            content: Text("Do you want to delete me!!!"),
-            actions: [
-              TextButton(onPressed: (){
-                MySnackBar("Delete Success",context);
-                Navigator.pop(context);}, child: Text("Yes")),
-              TextButton(onPressed: (){Navigator.pop(context);}, child: Text("No")),
-            ],
-          )
-        );
-      }
+        context: context,
+        builder: (BuildContext context){
+          return Expanded(
+              child: AlertDialog(
+                title: Text("Alert"),
+                content: Text("Do you want to delete me!!!"),
+                actions: [
+                  TextButton(onPressed: (){
+                    MySnackBar("Delete Success",context);
+                    Navigator.pop(context);}, child: Text("Yes")),
+                  TextButton(onPressed: (){Navigator.pop(context);}, child: Text("No")),
+                ],
+              )
+          );
+        }
     );
   }
-
-
   @override
   Widget build(BuildContext context) {
 
@@ -65,7 +97,6 @@ class HomeActivity extends StatelessWidget{
 
 
     return Scaffold(
-
       //AppBar
       appBar: AppBar(
         title: Text("Prosenjit"),
@@ -85,7 +116,6 @@ class HomeActivity extends StatelessWidget{
 
         ],
       ),
-
       //floatingActionButton:()
       floatingActionButton: FloatingActionButton(
         elevation: 10,
@@ -95,7 +125,6 @@ class HomeActivity extends StatelessWidget{
           MySnackBar("I am in Floating Action Button",context);
         },
       ),
-
       // bottomNavigationBar:(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
@@ -107,28 +136,27 @@ class HomeActivity extends StatelessWidget{
         ],
 
         onTap: (int index){
-        if(index==0){
-          MySnackBar("I am in Home",context);
-      }
-        if(index==1){
-          MySnackBar("I am in Contact",context);
-        }
-        if(index==2){
-          MySnackBar("I am in Profile",context);
-        }
-      },
+          if(index==0){
+            MySnackBar("I am in Home",context);
+          }
+          if(index==1){
+            MySnackBar("I am in Contact",context);
+          }
+          if(index==2){
+            MySnackBar("I am in Profile",context);
+          }
+        },
       ),
-
       // drawer: (),
       drawer: Drawer(
         child: ListView(
           children: [
             DrawerHeader(
-              padding: EdgeInsets.all(0),
+                padding: EdgeInsets.all(0),
                 child: UserAccountsDrawerHeader(
                     decoration: BoxDecoration(color: Colors.white),
-                  accountName: Text("Prosenjit Mondol", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-                  accountEmail: Text("prosenjit1156@gmail.com",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black)),
+                    accountName: Text("Prosenjit Mondol", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                    accountEmail: Text("prosenjit1156@gmail.com",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black)),
                     currentAccountPictureSize: Size.fromRadius(35),
                     currentAccountPicture: Image.network("https://avatars.githubusercontent.com/u/143212336?v=4"),
                     onDetailsPressed: (){MySnackBar("This is my Profile",context);}
@@ -137,28 +165,27 @@ class HomeActivity extends StatelessWidget{
 
             ListTile(leading: Icon(Icons.home),
                 title:Text("Home"),
-            onTap: (){
-              MySnackBar("I am in Home",context);
-            }),
+                onTap: (){
+                  MySnackBar("I am in Home",context);
+                }),
             ListTile(leading: Icon(Icons.email),
-            title: Text("Email"),
-            onTap: (){
-              MySnackBar("I am in email", context);
-            }),
+                title: Text("Email"),
+                onTap: (){
+                  MySnackBar("I am in email", context);
+                }),
             ListTile(leading: Icon(Icons.phone),
-            title: Text("Phone"),
-            onTap: (){
-              MySnackBar("I am in Phone", context);
-            }),
+                title: Text("Phone"),
+                onTap: (){
+                  MySnackBar("I am in Phone", context);
+                }),
             ListTile(leading: Icon(Icons.person),
-            title: Text("Profile"),
-            onTap: (){
-              MySnackBar("I am in Profile", context);
-            })
+                title: Text("Profile"),
+                onTap: (){
+                  MySnackBar("I am in Profile", context);
+                })
           ],
         ),
       ),
-
       // endDrawer:(),
       endDrawer: Drawer(
         child: ListView(
@@ -198,8 +225,6 @@ class HomeActivity extends StatelessWidget{
           ],
         ),
       ),
-
-
       //body: Text("Prosenjit Mondol is a legendary grandmaster at codeforces"),
       // body: Container(
       //   height: 250,
@@ -228,8 +253,6 @@ class HomeActivity extends StatelessWidget{
       body: Center(
         child: ElevatedButton(child:Text("Click Me"),onPressed: (){MyAlertDialog(context);},),
       ),
-
-
     );
   }
 }
