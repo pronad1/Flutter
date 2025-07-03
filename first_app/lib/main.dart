@@ -8,6 +8,7 @@ class MyApp extends StatelessWidget{
   const MyApp({super.key});
 
 
+// ctrl + p for parameter
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +28,19 @@ class HomeActivity extends StatelessWidget{
   }
 
 
+
   @override
   Widget build(BuildContext context) {
+
+    ButtonStyle buttonStyle=ElevatedButton.styleFrom(
+      padding: EdgeInsets.all(15),
+      backgroundColor: Colors.blue,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(40)
+      )
+    );
+
 
     return Scaffold(
 
@@ -184,14 +196,11 @@ class HomeActivity extends StatelessWidget{
       body: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          TextButton(onPressed: (){MySnackBar("I am Text Button",context);}, child: Text("Text Button")),
-
+          TextButton(onPressed: (){MySnackBar("I am Text Button",context);}, style: buttonStyle, child: Text("Text Button")),
+          ElevatedButton(onPressed: (){MySnackBar("I am ElevatedButton",context);}, style: buttonStyle, child: Text("Elevated Button"),),
+          OutlinedButton(onPressed: (){MySnackBar("I am Outlined Button",context);}, style: buttonStyle, child: Text("Outlined Button")),
         ],
       ),
-
-
     );
-
   }
-
 }
