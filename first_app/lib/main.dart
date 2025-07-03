@@ -167,9 +167,19 @@ class HomeActivity extends StatelessWidget{
 
 
       //body: Text("Prosenjit Mondol is a legendary grandmaster at codeforces"),
-      body: Center(
-      child: Text("Hey Pro da r u choda no matter what are you doing but matter hay if you are not doing anything special!!!"),
-      )
+      body: Container(
+        height: 250,
+        width: 250,
+        alignment: Alignment.topCenter,
+        margin: EdgeInsets.all(60),
+        padding:EdgeInsets.all(60),
+
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          border: Border.all(color: Colors.black,width: 2),
+        ),
+        child: Image.network("https://avatars.githubusercontent.com/u/143212336?v=4")
+      ),
 
 
 
