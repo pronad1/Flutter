@@ -1,13 +1,4 @@
 import 'package:flutter/material.dart';
-import 'Fragment/AlarmFragment.dart';
-import 'Fragment/BalanceFragment.dart';
-import 'Fragment/EmailFragment.dart';
-import 'Fragment/HomeFragment.dart';
-import 'Fragment/PersonFragment.dart';
-import 'Fragment/PhoneFragment.dart';
-import 'Fragment/SearchFragment.dart';
-import 'Fragment/SettingFragment.dart';
-
 
 main(){
   runApp(const MyApp());
@@ -29,40 +20,96 @@ class HomeActivity extends StatelessWidget{
   @override
   Widget build(BuildContext context){
 
-    return DefaultTabController(
-        length: 9,
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text("Prosen"),
-            backgroundColor: Colors.blue,
-            bottom: TabBar(
-              isScrollable: true,
-                tabs: [
-                  Tab(icon: Icon(Icons.home),text:'Home'),
-                  Tab(icon: Icon(Icons.message),text: 'Message'),
-                  Tab(icon: Icon(Icons.person),text: 'Person',),
-                  Tab(icon: Icon(Icons.settings),text: 'Settings'),
-                  Tab(icon: Icon(Icons.email),text: 'Email'),
-                  Tab(icon: Icon(Icons.phone),text: 'Phone'),
-                  Tab(icon: Icon(Icons.account_balance),text: 'Balance'),
-                  Tab(icon: Icon(Icons.access_alarm),text: 'Alarm'),
-                ]
-            ),
-          ),
-          body: TabBarView(
-              children: [
-                HomeFragment(),
-                SearchFragment(),
-                SettingFragment(),
-                EmailFragment(),
-                PhoneFragment(),
-                PersonFragment(),
-                BalanceFragment(),
-                AlarmFragment(),
-              ],
-          ),
-        )
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Prosen"),
+        backgroundColor: Colors.blue,
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+
+          ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(40)
+                )
+              ),
+              onPressed: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity1()));
+          }, child: Text("Go Activity 1")),
+
+          ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(40)
+                  )
+              ),
+              onPressed: (){
+
+            Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity2()));
+            }, child: Text("Go Activity 2")),
+        ],
+      ),
     );
 
+  }
+}
+
+class Activity1 extends StatelessWidget{
+
+  @override
+  Widget build(BuildContext context){
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Activity1"),
+        backgroundColor: Colors.red,
+      ),
+      body:Center(
+        child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(40)
+                )
+            ),
+            onPressed: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity2()));
+            }, child: Text("Go Activity 2")),
+      )
+    );
+  }
+}
+
+class Activity2 extends StatelessWidget{
+
+  @override
+  Widget build(BuildContext context){
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Activity2"),
+        backgroundColor: Colors.pinkAccent,
+      ),
+      body:Center(
+        child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(40)
+                )
+            ),
+            onPressed: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity1()));
+            }, child: Text("Go Activity 1")),
+      )
+    );
   }
 }
