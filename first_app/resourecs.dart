@@ -303,3 +303,98 @@ child: Image.network(MyItems[index]['img']!, fit: BoxFit.fill,),
 );
 }
 }
+
+// For Dynamic list gride view builder
+// just change small in dynamic list that
+body: GridView.builder(
+gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+crossAxisCount: 2,
+crossAxisSpacing: 0,
+childAspectRatio:1,
+),
+
+
+// For create different  Fragment at first create a fragment folder and there create all fragment files and then call from main file
+import 'package:flutter/material.dart';
+import 'Fragment/AlarmFragment.dart';
+import 'Fragment/BalanceFragment.dart';
+import 'Fragment/EmailFragment.dart';
+import 'Fragment/HomeFragment.dart';
+import 'Fragment/PersonFragment.dart';
+import 'Fragment/PhoneFragment.dart';
+import 'Fragment/SearchFragment.dart';
+import 'Fragment/SettingFragment.dart';
+
+
+main(){
+runApp(const MyApp());
+}
+class MyApp extends StatelessWidget{
+const MyApp({super.key});
+
+// ctrl + p for parameter
+@override
+Widget build(BuildContext context) {
+return MaterialApp(
+home: HomeActivity()
+);
+}
+}
+
+class HomeActivity extends StatelessWidget{
+
+@override
+Widget build(BuildContext context){
+
+return DefaultTabController(
+length: 9,
+child: Scaffold(
+appBar: AppBar(
+title: Text("Prosen"),
+backgroundColor: Colors.blue,
+bottom: TabBar(
+isScrollable: true,
+tabs: [
+Tab(icon: Icon(Icons.home),text:'Home'),
+Tab(icon: Icon(Icons.message),text: 'Message'),
+Tab(icon: Icon(Icons.person),text: 'Person',),
+Tab(icon: Icon(Icons.settings),text: 'Settings'),
+Tab(icon: Icon(Icons.email),text: 'Email'),
+Tab(icon: Icon(Icons.phone),text: 'Phone'),
+Tab(icon: Icon(Icons.account_balance),text: 'Balance'),
+Tab(icon: Icon(Icons.access_alarm),text: 'Alarm'),
+]
+),
+),
+body: TabBarView(
+children: [
+HomeFragment(),
+SearchFragment(),
+SettingFragment(),
+EmailFragment(),
+PhoneFragment(),
+PersonFragment(),
+BalanceFragment(),
+AlarmFragment(),
+],
+),
+)
+);
+
+}
+}
+
+// This is demo of home fragment
+import 'package:flutter/cupertino.dart';
+
+class HomeFragment extends StatelessWidget{
+
+@override
+Widget build(BuildContext context){
+return Container(
+child: Center(
+child: Text("HomeFragment"),
+),
+);
+}
+}

@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'Fragment/AlarmFragment.dart';
+import 'Fragment/BalanceFragment.dart';
+import 'Fragment/EmailFragment.dart';
+import 'Fragment/HomeFragment.dart';
+import 'Fragment/PersonFragment.dart';
+import 'Fragment/PhoneFragment.dart';
+import 'Fragment/SearchFragment.dart';
+import 'Fragment/SettingFragment.dart';
+
 
 main(){
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget{
   const MyApp({super.key});
 
@@ -17,47 +25,44 @@ class MyApp extends StatelessWidget{
 }
 
 class HomeActivity extends StatelessWidget{
-  HomeActivity({super.key});
-
-var MyItems=[
-  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
-  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
-  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
-  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
-  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"},
-  {"img":"https://pronad1.github.io/Personal-Portfolio/small-black.jpg","title":"Prosenjit"}
-
-
-];
-
-mySnackBar(context,msg){
-  return ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-}
-
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
 
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("My App"),
-        backgroundColor: Colors.green,
-      ),
-
-      body: ListView.builder(
-        itemCount: MyItems.length,
-          itemBuilder: (context,index){
-          return GestureDetector(
-            onDoubleTap: (){mySnackBar(context, MyItems[index]['title']);},
-            child: Container(
-              margin: EdgeInsets.all(10),
-              height: 350,
-              child: Image.network(MyItems[index]['img']!, fit: BoxFit.fill,),
+    return DefaultTabController(
+        length: 9,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text("Prosen"),
+            backgroundColor: Colors.blue,
+            bottom: TabBar(
+              isScrollable: true,
+                tabs: [
+                  Tab(icon: Icon(Icons.home),text:'Home'),
+                  Tab(icon: Icon(Icons.message),text: 'Message'),
+                  Tab(icon: Icon(Icons.person),text: 'Person',),
+                  Tab(icon: Icon(Icons.settings),text: 'Settings'),
+                  Tab(icon: Icon(Icons.email),text: 'Email'),
+                  Tab(icon: Icon(Icons.phone),text: 'Phone'),
+                  Tab(icon: Icon(Icons.account_balance),text: 'Balance'),
+                  Tab(icon: Icon(Icons.access_alarm),text: 'Alarm'),
+                ]
             ),
-          );
-          },
-      )
+          ),
+          body: TabBarView(
+              children: [
+                HomeFragment(),
+                SearchFragment(),
+                SettingFragment(),
+                EmailFragment(),
+                PhoneFragment(),
+                PersonFragment(),
+                BalanceFragment(),
+                AlarmFragment(),
+              ],
+          ),
+        )
     );
+
   }
 }
