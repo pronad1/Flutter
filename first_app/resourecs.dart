@@ -399,7 +399,7 @@ child: Text("HomeFragment"),
 }
 }
 
-// Simple Navigation go from one page to another
+// Simple Navigation go from one page to another and also pass data from one to another
 import 'package:flutter/material.dart';
 
 main(){
@@ -440,7 +440,7 @@ borderRadius: BorderRadius.circular(40)
 )
 ),
 onPressed: (){
-Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity1()));
+Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity1("This is from Activity 1")));
 }, child: Text("Go Activity 1")),
 
 ElevatedButton(
@@ -453,7 +453,7 @@ borderRadius: BorderRadius.circular(40)
 ),
 onPressed: (){
 
-Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity2()));
+Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity2("This is from Activity 2")));
 }, child: Text("Go Activity 2")),
 ],
 ),
@@ -464,12 +464,20 @@ Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity2()));
 
 class Activity1 extends StatelessWidget{
 
+String msg;
+
+Activity1(
+this.msg,
+{super.key}
+);
+
+
 @override
 Widget build(BuildContext context){
 
 return Scaffold(
 appBar: AppBar(
-title: Text("Activity1"),
+title: Text(msg),
 backgroundColor: Colors.red,
 ),
 body:Center(
@@ -482,7 +490,7 @@ borderRadius: BorderRadius.circular(40)
 )
 ),
 onPressed: (){
-Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity2()));
+Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity2("This is from Activity 1 to Activity 2")));
 }, child: Text("Go Activity 2")),
 )
 );
@@ -490,13 +498,18 @@ Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity2()));
 }
 
 class Activity2 extends StatelessWidget{
+String msg;
+Activity2(
+this.msg,
+{super.key});
+
 
 @override
 Widget build(BuildContext context){
 
 return Scaffold(
 appBar: AppBar(
-title: Text("Activity2"),
+title: Text(msg),
 backgroundColor: Colors.pinkAccent,
 ),
 body:Center(
@@ -509,10 +522,44 @@ borderRadius: BorderRadius.circular(40)
 )
 ),
 onPressed: (){
-Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity1()));
+Navigator.push(context, MaterialPageRoute(builder: (context)=>Activity1("This is from Activity 2 to Activity 1")));
 }, child: Text("Go Activity 1")),
 )
 );
 }
 }
 
+
+// Make a carde
+body: Center(
+child: Card(
+shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+shadowColor: Colors.green,
+color: Color.fromRGBO(33, 191, 114, 1),
+elevation: 79,
+child: SizedBox(
+height: 200,
+width: 200,
+child: Center(child: Text("This is card"),),
+),
+
+// Circular Progress Indicator
+
+body: Center(
+child: CircularProgressIndicator(
+color: Colors.green,
+strokeWidth: 5,
+backgroundColor: Colors.black,
+),
+),
+
+// Liner Progress Indicator
+
+child: LinearProgressIndicator(
+minHeight: 4,
+color: Colors.black,
+backgroundColor: Colors.green,
+),
+
+// Icons
+child: Icon(Icons.camera_enhance,size: 49,color: Colors.blue,),
