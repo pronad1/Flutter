@@ -564,3 +564,79 @@ backgroundColor: Colors.green,
 // Icons
 child: Icon(Icons.camera_enhance,size: 49,color: Colors.blue,),
 
+// Stateful Widget
+// It has CreateState(), InitState(), didChangeDependencies(), build(), SetState(),
+import 'package:flutter/material.dart';
+
+main() {
+runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+const MyApp({super.key});
+
+@override
+Widget build(BuildContext context) {
+return MaterialApp(
+title: 'Flutter Demo',
+theme: ThemeData(
+primaryColor: Colors.blue, // Keeping your original theme for minimal change
+),
+home: MyHomePage(), // CHANGED: Using MyHomePage here
+);
+}
+}
+
+class MyHomePage extends StatefulWidget {
+// Keeping countNumber here as per your original code for minimal change
+// Although best practice is to move it to the State class.
+int countNumber = 0;
+
+// Number 01
+@override
+State<StatefulWidget> createState() { // Keeping original State<StatefulWidget>
+print("createState called");
+return MyHomePageUi();
+}
+}
+
+class MyHomePageUi extends State<MyHomePage> {
+// Number 02
+@override
+void initState() {
+print("initstate called");
+super.initState();
+}
+
+// Number 03
+@override
+void didChangeDependencies() {
+print("didChangeDependencies called");
+super.didChangeDependencies();
+}
+
+// Number 04
+@override
+Widget build(BuildContext context) { // FIXED: Added Widget return type
+print("build called");
+return Scaffold(
+appBar: AppBar(title: Text("App"),backgroundColor: Colors.blue,), // Kept as is
+body: Center(
+child: Text("Count: ${widget.countNumber}"), // Kept as is
+),
+floatingActionButton: FloatingActionButton(
+child: Icon(Icons.add), // Kept as is
+onPressed: () {
+// Number 05
+setState(() {
+print("setState called");
+widget.countNumber++; // Kept as is
+});
+},
+),
+);
+}
+}
+
+
+// Responsive and adaptivek
