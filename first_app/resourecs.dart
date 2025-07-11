@@ -677,3 +677,74 @@ color: Colors.black,
 )
 
 // Layout Builder
+body: LayoutBuilder(
+builder:(BuildContext context, BoxConstraints constraints){
+if(constraints.maxWidth>600){
+return Container(height: 400,width: 400,color: Colors.pink,);
+}
+else{
+return Container(height: 200,width: 200,color: Colors.blue,);
+}
+}
+)
+
+// Scroll  view
+body: SingleChildScrollView(
+scrollDirection: Axis.vertical, // for horizontal scroll use Axis.horizontal
+child: Column(  // for horizontal scroll use Row
+mainAxisAlignment: MainAxisAlignment.start,
+children: [
+Container(height: 200,width: 200,color: Colors.blue,),
+Container(height: 200,width: 200,color: Colors.red,),
+Container(height: 200,width: 200,color: Colors.green,),
+Container(height: 200,width: 200,color: Colors.yellow,),
+Container(height: 200,width: 200,color: Colors.orange,),
+Container(height: 200,width: 200,color: Colors.pink,),
+Container(height: 200,width: 200,color: Colors.purple,),
+],
+),
+)
+
+// Expanded/Flexible
+body: Column(
+mainAxisAlignment: MainAxisAlignment.start,
+children: [
+Expanded(flex:1,child: Container(color: Colors.pink,)),
+Expanded(flex:2,child: Container(color: Colors.yellow,)),
+Expanded(flex:3,child: Container(color: Colors.blue,)),
+Expanded(flex:4,child: Container(color: Colors.green,)),
+],
+),
+//or
+body: Column(
+mainAxisAlignment: MainAxisAlignment.start,
+children: [
+Flexible(fit: FlexFit.tight,flex:1,child: Container(color: Colors.pink,)),
+Flexible(fit: FlexFit.tight,flex:2,child: Container(color: Colors.yellow,)),
+Flexible(fit: FlexFit.tight,flex:3,child: Container(color: Colors.blue,)),
+Flexible(fit: FlexFit.tight,flex:4,child: Container(color: Colors.green,)),
+],
+),
+
+// Media Query
+Widget build(BuildContext context) {
+
+var width=MediaQuery.of(context).size.width;
+var heigh=MediaQuery.of(context).size.height;
+var orientation=MediaQuery.of(context).orientation;
+
+
+return Scaffold(
+appBar: AppBar(
+title: Text("Home"),
+backgroundColor: Colors.green,
+),
+body: Column(
+mainAxisAlignment: MainAxisAlignment.start,
+children: [
+Text("Screen Width:- $width"),
+Text("Screen Height:- $heigh"),
+Text("Screen Orientation:- $orientation")
+],
+),
+);

@@ -20,20 +20,25 @@ class HomeActivity extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
+
+    var width=MediaQuery.of(context).size.width;
+    var heigh=MediaQuery.of(context).size.height;
+    var orientation=MediaQuery.of(context).orientation;
+    
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Home"),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.green,
       ),
-      body: Center(
-        child: FractionallySizedBox(
-          widthFactor: 0.5,
-          heightFactor: 0.3,
-          child: Container(
-            color: Colors.black,
-          ),
-        ),
-      )
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text("Screen Width:- $width"),
+        Text("Screen Height:- $heigh"),
+          Text("Screen Orientation:- $orientation")
+        ],
+      ),
     );
   }
 }
