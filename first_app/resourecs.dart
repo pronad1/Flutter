@@ -639,4 +639,41 @@ widget.countNumber++; // Kept as is
 }
 
 
-// Responsive and adaptivek
+// Responsive and adaptive
+// AspectRatio
+class HomeActivity extends StatelessWidget{
+@override
+Widget build(BuildContext context) {
+return Scaffold(
+appBar: AppBar(
+title: Text("Home"),
+backgroundColor: Colors.blue,
+),
+body: Container(
+width: double.infinity,
+height: 300,
+color: Colors.red,
+alignment: Alignment.center,
+child: AspectRatio(
+aspectRatio: 16/9,
+child: Container(
+color: Colors.green,
+),
+),
+),
+);
+}
+}
+
+// Fractionally sized Box
+body: Center(
+child: FractionallySizedBox(
+widthFactor: 0.5,
+heightFactor: 0.3,
+child: Container(
+color: Colors.black,
+),
+),
+)
+
+// Layout Builder

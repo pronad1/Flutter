@@ -10,62 +10,30 @@ class MyApp extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-        theme: ThemeData(
-          primaryColor: Colors.blue,
-        ),
         home: HomeActivity()
     );
   }
 }
 
+class HomeActivity extends StatelessWidget{
+  const HomeActivity({super.key});
 
-
-class MyHomePage extends StatefulWidget{
-  int countNumber=0;
-
-
-  // Number 01
   @override
-  State<StatefulWidget> createState(){
-    return MyHomePageUi();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Home"),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
+        child: FractionallySizedBox(
+          widthFactor: 0.5,
+          heightFactor: 0.3,
+          child: Container(
+            color: Colors.black,
+          ),
+        ),
+      )
+    );
   }
 }
-
-
-
-
-class MyHomePageUi extends State<MyHomePage>{
-
-  // Number 02
-  @override
-  void initState(){
-    print("initstate called");
-    super.initState();
-  }
-
-
-  // Number 03
-  @override
-  void didChangeDependencies(){
-    print("didChangeDependencies called");
-    super.didChangeDependencies();
-  }
-
-  // Number 04
-
-@override
-  widget build(BuildContext context){
-  print("build called");
-  return Scaffold(
-    appBar: AppBar(
-  ),
-}
-
-
-
-
-
-
-}
-
