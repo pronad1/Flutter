@@ -1,3 +1,4 @@
+import 'package:first_app/style.dart';
 import 'package:flutter/material.dart';
 
 main(){
@@ -21,11 +22,6 @@ class HomeActivity extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
 
-    var width=MediaQuery.of(context).size.width;
-    var heigh=MediaQuery.of(context).size.height;
-    var orientation=MediaQuery.of(context).orientation;
-    
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Home"),
@@ -34,9 +30,7 @@ class HomeActivity extends StatelessWidget{
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text("Screen Width:- $width"),
-        Text("Screen Height:- $heigh"),
-          Text("Screen Orientation:- $orientation")
+          Text("Hello Flutter ", style: HeadLine(context)),
         ],
       ),
     );
