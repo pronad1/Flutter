@@ -1,5 +1,6 @@
 import 'package:first_app/style.dart';
 import 'package:flutter/material.dart';
+import 'package:responsive_grid/responsive_grid.dart';
 
 main(){
   runApp(const MyApp());
@@ -27,12 +28,8 @@ class HomeActivity extends StatelessWidget{
         title: Text("Home"),
         backgroundColor: Colors.green,
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text("Hello Flutter ", style: HeadLine(context)),
-        ],
-      ),
+
+
     );
   }
 }

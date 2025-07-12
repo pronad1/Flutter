@@ -110,6 +110,12 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "responsive_grid",
+      "rootUri": "file:///C:/Users/prose/AppData/Local/Pub/Cache/hosted/pub.dev/responsive_grid-2.4.4",
+      "packageUri": "lib/",
+      "languageVersion": "2.16"
+    },
+    {
       "name": "sky_engine",
       "rootUri": "file:///D:/Apps/flutter_windows_3.32.5-stable/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
