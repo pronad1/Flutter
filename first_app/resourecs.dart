@@ -750,4 +750,58 @@ Text("Screen Orientation:- $orientation")
 );
 
 // responsive_grid
+import 'package:responsive_grid/responsive_grid.dart';
 
+body: SingleChildScrollView(
+scrollDirection: Axis.vertical,
+child: ResponsiveGridRow(
+children:[
+ResponsiveGridCol(
+xl:3, lg: 3,md: 4,sm: 6,xs: 12,
+child: Container(
+height: 100,
+color:Colors.blue,
+)
+),
+ResponsiveGridCol(
+xl:3, lg: 3,md: 4,sm: 6,xs: 12,
+child: Container(
+height: 100,
+color:Colors.orange,
+)
+),
+],
+),
+)
+
+// Flutter Boostrap
+import 'package:flutter_bootstrap/flutter_bootstrap.dart';
+body: SingleChildScrollView(
+scrollDirection: Axis.vertical,
+child: BootstrapContainer(
+fluid: true,
+children: [
+BootstrapRow(
+height: 100,
+children:[
+BootstrapCol(
+sizes: 'col-xl-1 col-xg-2 col-md-3 col-sm-4 col-6',
+child: Container(
+height: 100,
+color: Colors.brown,
+)
+),
+BootstrapCol(
+sizes: 'col-xl-1 col-xg-2 col-md-3 col-sm-4 col-6',
+child: Container(
+height: 100,
+color: Colors.grey,
+)
+),
+]
+)
+],
+)
+)
+
+//

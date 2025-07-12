@@ -9,6 +9,7 @@
       "dependencies": [
         "cupertino_icons",
         "flutter",
+        "flutter_bootstrap",
         "responsive_grid"
       ],
       "devDependencies": [
@@ -49,6 +50,13 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "flutter_bootstrap",
+      "version": "2.0.0",
+      "dependencies": [
+        "flutter"
       ]
     },
     {

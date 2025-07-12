@@ -50,6 +50,12 @@
       "languageVersion": "3.7"
     },
     {
+      "name": "flutter_bootstrap",
+      "rootUri": "file:///C:/Users/prose/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_bootstrap-2.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "flutter_lints",
       "rootUri": "file:///C:/Users/prose/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-5.0.0",
       "packageUri": "lib/",
