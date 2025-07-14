@@ -25,12 +25,25 @@ class MyHomePage extends StatefulWidget{
 }
 
 class MyHomePageUI extends State<MyHomePage>{
+
+  int cont=0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Counter App"),
         backgroundColor: Colors.grey,
+      ),
+      body: Center(
+        child: Text(cont.toString()),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: (){
+          setState(() {
+            cont=cont+1;
+          });
+        },
       ),
     );
   }
