@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'style.dart';
+
 
 void main(){
   runApp(MyApp());
@@ -10,12 +12,11 @@ class MyApp extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Counter App ",
+      title: "Sum App ",
       home: MyHomePage(),
     );
   }
 }
-
 
 class MyHomePage extends StatefulWidget{
   @override
@@ -24,26 +25,66 @@ class MyHomePage extends StatefulWidget{
   }
 }
 
-class MyHomePageUI extends State<MyHomePage>{
+class MyHomePageUI extends State<MyHomePage> {
 
-  int cont=0;
+
+  Map<String,double> FormValue={"Num1":0,"Num2":0,"Num3":0};
+
+  double sum=0;
+
   @override
   Widget build(BuildContext context) {
+
+MyInputOnChange(InputKey,InputValue){
+  setState(() {
+    FormValue.update(InputKey,(value)=>double.parse(InputValue));
+  });
+}
+
+
+AddAllNumber(){
+  setState(() {
+    sum=FormValue['Num1']!+FormValue['Num2']!+FormValue['Num3']!;
+  });
+}
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Counter App"),
-        backgroundColor: Colors.grey,
-      ),
-      body: Center(
-        child: Text(cont.toString()),
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: (){
-          setState(() {
-            cont=cont+1;
-          });
-        },
+      appBar: AppBar(title: Text("Add"),),
+      body: Padding(
+        padding: EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(sum.toString(),style:HeadTextStyle()),
+
+            SizedBox(height: 20,),
+            TextFormField(onChanged:(value){
+              MyInputOnChange("Num1",value);
+            }, decoration: AppInputStyle("First Number"),),
+
+
+            SizedBox(height: 20,),
+            TextFormField(onChanged:(value){
+              MyInputOnChange("Num2",value);
+            },decoration: AppInputStyle("Second Number"),),
+
+            SizedBox(height: 20,),
+            TextFormField(onChanged:(value){
+              MyInputOnChange("Num3",value);
+            },decoration: AppInputStyle("Third Number"),),
+
+            SizedBox(height: 20,),
+            Container(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: AppButtonStyle(),
+              child: Text("Add"),
+              onPressed: () {
+                  AddAllNumber();
+              },
+            ),)
+          ],
+        ),
       ),
     );
   }
