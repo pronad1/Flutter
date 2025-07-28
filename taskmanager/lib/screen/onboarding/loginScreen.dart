@@ -37,7 +37,7 @@ class _loginScreenState extends State<loginScreen> {
       bool res=await LoginRequest(FormValues);
       if(res==true){
         // navigate to dashboard page
-        
+        Navigator.pushNamedAndRemoveUntil(context, "/newTaskList", (route)=>false);
       }
       else{
         setState(() {Loading=false;});
@@ -56,39 +56,42 @@ class _loginScreenState extends State<loginScreen> {
         children: [
           ScreenBackground(context),
           Container(
-           padding: EdgeInsets.all(30),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Let's Go", style: Head1Text(colorDarkBlue)),
-                  SizedBox(height: 1),
-                  Text("Starting with new hopes!!!", style: Head6Text(colorLightGray)),
-                  SizedBox(height: 20),
-                  TextFormField(
-                    onChanged: (Textvalue){
-                      InputOnChange("email", Textvalue);
-                    },
-                    decoration: AppInputDecoration("Email Address"),
-                  ),
-                  SizedBox(height: 20),
-                  TextFormField(
-                    onChanged: (Textvalue){
-                      InputOnChange("password", Textvalue);
-                    },
-                    decoration: AppInputDecoration("Password"),
-                  ),
-                  SizedBox(height: 20),
-                  Container(child: ElevatedButton(
-                      style: AppButtonStyle(),
-                      child: SuccessButtonChild('Login'),
-                    onPressed: (){
-                      FormOnSubmit();
-                    },
-                  ),
-                  )
-                ],
-              ),
+            alignment: Alignment.center,
+           child: Loading?(Center(child: CircularProgressIndicator())):(SingleChildScrollView(
+             padding: EdgeInsets.all(30),
+             child: Column(
+               mainAxisAlignment: MainAxisAlignment.center,
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 Text("Let's Go", style: Head1Text(colorDarkBlue)),
+                 SizedBox(height: 1),
+                 Text("Starting with new hopes!!!", style: Head6Text(colorLightGray)),
+                 SizedBox(height: 20),
+                 TextFormField(
+                   onChanged: (Textvalue){
+                     InputOnChange("email", Textvalue);
+                   },
+                   decoration: AppInputDecoration("Email Address"),
+                 ),
+                 SizedBox(height: 20),
+                 TextFormField(
+                   onChanged: (Textvalue){
+                     InputOnChange("password", Textvalue);
+                   },
+                   decoration: AppInputDecoration("Password"),
+                 ),
+                 SizedBox(height: 20),
+                 Container(child: ElevatedButton(
+                   style: AppButtonStyle(),
+                   child: SuccessButtonChild('Login'),
+                   onPressed: (){
+                     FormOnSubmit();
+                   },
+                 ),
+                 )
+               ],
+             ),
+           )),
           )
         ],
       ),

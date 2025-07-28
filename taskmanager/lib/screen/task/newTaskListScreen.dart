@@ -10,6 +10,10 @@ class newTaskListScreen extends StatefulWidget {
 class _newTaskListScreenState extends State<newTaskListScreen> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      body: Center(
+        child: Text('dash'),
+      ),
+    );
   }
 }
