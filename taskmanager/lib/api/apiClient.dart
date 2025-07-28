@@ -17,6 +17,7 @@ Future<bool> LoginRequest(FormValues) async {
 
   if (ResultCode == 200 && ResultBody['status'] == "success") {
     SuccessToast("Request Successful");
+    await StoreUserData(ResultBody);
     return true;
   } else {
     ErrorToast("Request Failed! Try again");
