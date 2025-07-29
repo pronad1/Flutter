@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:taskmanager/screen/onboarding/emailVerificationScreen.dart';
-import 'package:taskmanager/screen/onboarding/loginScreen.dart';
+import 'package:taskmanager/screen/onboarding/LoginScreen.dart';
 import 'package:taskmanager/screen/onboarding/pinVerificationScreen.dart';
 import 'package:taskmanager/screen/onboarding/registrationScreen.dart';
 import 'package:taskmanager/screen/onboarding/setPasswordScreen.dart';
