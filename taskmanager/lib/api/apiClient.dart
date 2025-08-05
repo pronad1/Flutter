@@ -7,7 +7,7 @@ var BaseURL = "https://task.teamrabbil.com/api/v1";
 var RequestHeader = {"Content-Type": "application/json"};
 
 Future<bool> LoginRequest(FormValues) async {
-  var URL = Uri.parse("https://corsproxy.io/?https://task.teamrabbil.com/api/v1/login");
+  var URL = Uri.parse("${BaseURL}/login");
 
   var PostBody = json.encode(FormValues);
 

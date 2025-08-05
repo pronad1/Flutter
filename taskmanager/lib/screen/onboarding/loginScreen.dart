@@ -9,6 +9,7 @@ class loginScreen extends StatefulWidget {
   State<loginScreen> createState() => _loginScreenState();
 }
 
+
 class _loginScreenState extends State<loginScreen> {
   Map<String, String> formValues = {"email": "", "password": ""};
   bool loading = false;
@@ -43,6 +44,7 @@ class _loginScreenState extends State<loginScreen> {
       } catch (e) {
         // catch any unexpected errors
         ErrorToast('An error occurred: $e');
+        print(e.toString());
         setState(() {
           loading = false;
         });
