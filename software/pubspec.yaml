@@ -38,7 +38,7 @@ dependencies:
   firebase_auth: ^6.0.0        # Upgraded from 4.17.6
   cloud_firestore: ^6.0.0
   firebase_storage: ^13.0.0
-  image_picker: ^1.1.0
+  image_picker: ^0.8.7+3
   provider: ^6.1.2
   uuid: ^4.3.3
   cached_network_image: ^3.3.1
