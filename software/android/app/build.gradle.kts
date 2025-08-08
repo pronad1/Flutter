@@ -7,7 +7,9 @@ plugins {
 android {
     namespace = "com.example.software"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+
+    // Set NDK version to match the highest version required by plugins
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -20,7 +22,10 @@ android {
 
     defaultConfig {
         applicationId = "com.example.software"
-        minSdk = flutter.minSdkVersion
+
+        // Increase minSdk to 23 to satisfy firebase_auth plugin requirements
+        minSdk = 23
+
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -37,5 +42,5 @@ flutter {
     source = "../.."
 }
 
-// Add this line at the end of the file
-apply plugin: 'com.google.gms.google-services'
+// Correct Kotlin DSL syntax to apply the Google services plugin:
+apply(plugin = "com.google.gms.google-services")
