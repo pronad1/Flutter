@@ -34,17 +34,22 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  firebase_core: ^2.31.0
-  firebase_auth: ^4.17.6
-  cloud_firestore: ^4.14.1
-  firebase_storage: ^11.6.7
+  firebase_core: ^4.0.0        # Upgraded from 2.31.0
+  firebase_auth: ^6.0.0        # Upgraded from 4.17.6
+  cloud_firestore: ^6.0.0
+  firebase_storage: ^13.0.0
   image_picker: ^1.1.0
   provider: ^6.1.2
   uuid: ^4.3.3
-  fluttertoast: ^8.2.4
   cached_network_image: ^3.3.1
   google_fonts: ^6.2.0
-  intl: ^0.19.0
+  intl: ^0.20.2
+  flutter_svg: ^2.2.0
+  http: ^1.4.0
+  fluttertoast: ^8.2.12         # Keep latest
+  pin_code_fields: ^8.0.1
+  shared_preferences: ^2.5.3
+
 
 dev_dependencies:
   flutter_test:
@@ -55,7 +60,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -67,6 +72,14 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/images/
+
+
+  fonts:
+    - family: poppins
+      fonts:
+        - asset: fonts/Poppins-Regular.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
