@@ -1,8 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../style/style.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,8 +16,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-
-    // Fade-in animation setup
     _fadeController =
         AnimationController(vsync: this, duration: const Duration(seconds: 2));
     _fadeAnimation = CurvedAnimation(
@@ -28,24 +23,7 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.easeIn,
     );
     _fadeController.forward();
-
-    _navigateBasedOnAuth();
   }
-
-  void _navigateBasedOnAuth() {
-    Timer(const Duration(seconds: 5), () {
-      final user = FirebaseAuth.instance.currentUser;
-
-      if (user == null) {
-        // User not logged in
-        Navigator.pushReplacementNamed(context, '/register');
-      } else {
-        // User logged in
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    });
-  }
-
 
   @override
   void dispose() {
@@ -55,70 +33,59 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white, // or any color you like
-        elevation: 0,
-        title: const Text(
-          'ReuseHub',
-          style: TextStyle(color: Colors.green),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/login');
-            },
-            child: const Text(
-              'Login',
-              style: TextStyle(color: Colors.green, fontSize: 16),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/register');
-            },
-            child: const Text(
-              'Register',
-              style: TextStyle(color: Colors.green, fontSize: 16),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Stack(
-        children: [
-          screenBackground(context),
-          Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.1),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Welcome to ReuseHub!',
-                    style: head1Text(colorGreen),
-                    textAlign: TextAlign.center,
-                    semanticsLabel: 'Welcome message',
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ✅ Fade-in SVG logo
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SvgPicture.asset(
-                      'assets/images/logo_svg.svg',
-                      height: 120,
-                      semanticsLabel: 'ReuseHub Logo',
-                    ),
-                  ),
-
-                ],
+      backgroundColor: Colors.white,
+      body: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset(
+                'assets/images/logo_svg.svg',
+                height: 80,
+                semanticsLabel: 'ReuseHub Logo',
               ),
-            ),
+              const SizedBox(height: 20),
+              const Text(
+                "Fix Don't Replace:",
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const Text(
+                "Smart Repair Partner",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "ReuseHub helps you repair your items instead of throwing them away. "
+                    "Our AI guides you step by step, saving money and reducing waste.",
+                style: TextStyle(fontSize: 15, color: Colors.black54),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, '/home'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text("Go to Home"),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
