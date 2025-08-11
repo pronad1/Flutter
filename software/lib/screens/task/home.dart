@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../style/style.dart'; // your styles like head1Text, colors, etc.
 
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
