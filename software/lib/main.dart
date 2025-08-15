@@ -1,32 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:software/screens/onboarding/splashScreen.dart';
-import 'package:software/screens/profile/login.dart';
-import 'package:software/screens/profile/register.dart';
-import 'package:software/screens/task/home.dart';
 import 'firebase_options.dart';
+import 'src/config/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const ReuseHubApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ReuseHubApp extends StatelessWidget {
+  const ReuseHubApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Reuse Hub',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const SplashScreen(),
-        '/register': (context) => const RegisterScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/home': (context) => const HomeScreen(),
-      },
+      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
+      initialRoute: '/splash',
+      onGenerateRoute: Routes.generateRoute, // use generateRoute ONLY
     );
   }
 }

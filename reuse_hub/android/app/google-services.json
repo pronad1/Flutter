@@ -1,0 +1,119 @@
+{
+  "project_info": {
+    "project_number": "690134956948",
+    "firebase_url": "https://reuse-hub-4b3f7-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "reuse-hub-4b3f7",
+    "storage_bucket": "reuse-hub-4b3f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690134956948:android:8768fc9b7b0dc893e9ad81",
+        "android_client_info": {
+          "package_name": "com.example.reuse_hub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "690134956948-i14r3mj4ochfmpjf2pfgl9m426un7ug4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDL_jN5ULzH1YQ9dcEPu9dSBLOINs1X68"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "690134956948-i14r3mj4ochfmpjf2pfgl9m426un7ug4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "690134956948-hr1cbbnakdm5vlea6v5n71brfcdtnbhf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.software"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690134956948:android:6544569e36bda56ae9ad81",
+        "android_client_info": {
+          "package_name": "com.example.software"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "690134956948-i14r3mj4ochfmpjf2pfgl9m426un7ug4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDL_jN5ULzH1YQ9dcEPu9dSBLOINs1X68"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "690134956948-i14r3mj4ochfmpjf2pfgl9m426un7ug4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "690134956948-hr1cbbnakdm5vlea6v5n71brfcdtnbhf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.software"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690134956948:android:a3727355e4047d75e9ad81",
+        "android_client_info": {
+          "package_name": "prosen.com.reuse_hub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "690134956948-i14r3mj4ochfmpjf2pfgl9m426un7ug4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDL_jN5ULzH1YQ9dcEPu9dSBLOINs1X68"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "690134956948-i14r3mj4ochfmpjf2pfgl9m426un7ug4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "690134956948-hr1cbbnakdm5vlea6v5n71brfcdtnbhf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.software"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
