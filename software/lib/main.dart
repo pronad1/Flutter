@@ -12,7 +12,7 @@ void main() async {
 }
 
 class ReuseHubApp extends StatelessWidget {
-  const ReuseHubApp({Key? key}) : super(key: key);
+  const ReuseHubApp({super.key});
 
   @override
   Widget build(BuildContext context) {

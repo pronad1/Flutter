@@ -1,166 +1,201 @@
+// lib/src/screens/signup_screen.dart
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Your import path as you provided:
+import 'package:software/src/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({Key? key}) : super(key: key);
+  const SignUpScreen({super.key});
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _auth = FirebaseAuth.instance;
-  final _firestore = FirebaseFirestore.instance;
+  final _authService = AuthService();
+  final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
-  final TextEditingController mobileController = TextEditingController();
+  final nameController = TextEditingController();
+  final mobileController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
+  String _role = 'Donor';
   bool _isLoading = false;
+  bool _obscure1 = true;
+  bool _obscure2 = true;
 
-  Future<void> signUp() async {
-    final name = nameController.text.trim();
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
-    final confirmPass = confirmPasswordController.text.trim();
-    final mobile = mobileController.text.trim();
+  @override
+  void dispose() {
+    nameController.dispose();
+    mobileController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
 
-    if (name.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        confirmPass.isEmpty ||
-        mobile.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
-      return;
-    }
-
-    if (password != confirmPass) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
-      return;
-    }
+  Future<void> _onRegister() async {
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    try {
-      // Create Firebase Auth user
-      final userCredential = await _auth.createUserWithEmailAndPassword(
-          email: email, password: password);
-      final uid = userCredential.user!.uid;
+    final error = await _authService.signUp(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+      role: _role,
+      name: nameController.text.trim(),
+      mobile: mobileController.text.trim(),
+    );
 
-      // Save user data to Firestore
-      await _firestore.collection('users').doc(uid).set({
-        'name': name,
-        'email': email,
-        'mobile': mobile,
-        'profilePicUrl': '', // No profile pic
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+    if (!mounted) return;
+    setState(() => _isLoading = false);
 
+    if (error == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful!')),
+        const SnackBar(
+          content: Text(
+            'Registration successful! Please verify your email, then wait for admin approval.',
+          ),
+          duration: Duration(seconds: 5),
+        ),
       );
-
       Navigator.pushReplacementNamed(context, '/login');
-    } on FirebaseAuthException catch (e) {
-      String message = 'Sign up failed';
-      if (e.code == 'email-already-in-use') message = 'Email already registered';
-      if (e.code == 'weak-password') message = 'Password too weak';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign up failed: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign Up'),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            children: [
-              Text(
-                'Create your account',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 30),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: mobileController,
-                decoration: const InputDecoration(
-                  labelText: 'Mobile Number',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: confirmPasswordController,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 24),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: signUp,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Text(
-                      'Register',
-                      style: TextStyle(fontSize: 16),
+      appBar: AppBar(title: const Text('Sign Up'), centerTitle: true),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Create your account',
+                      style: Theme.of(context).textTheme.titleLarge,
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 24),
+
+                  // Role
+                  DropdownButtonFormField<String>(
+                    value: _role,
+                    items: const [
+                      DropdownMenuItem(value: 'Donor', child: Text('Donor')),
+                      DropdownMenuItem(value: 'Seeker', child: Text('Seeker')),
+                    ],
+                    onChanged: (v) => setState(() => _role = v ?? 'Donor'),
+                    decoration: const InputDecoration(
+                      labelText: 'Role',
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+
+                  // Full Name
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Full Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Full name is required' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Mobile
+                  TextFormField(
+                    controller: mobileController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Mobile Number',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Mobile is required' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Email
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Email is required';
+                      final ok = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v.trim());
+                      return ok ? null : 'Enter a valid email';
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Password
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: _obscure1,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(() => _obscure1 = !_obscure1),
+                        icon: Icon(_obscure1 ? Icons.visibility : Icons.visibility_off),
+                      ),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Password is required';
+                      if (v.length < 6) return 'At least 6 characters';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Confirm Password
+                  TextFormField(
+                    controller: confirmPasswordController,
+                    obscureText: _obscure2,
+                    decoration: InputDecoration(
+                      labelText: 'Confirm Password',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(() => _obscure2 = !_obscure2),
+                        icon: Icon(_obscure2 ? Icons.visibility : Icons.visibility_off),
+                      ),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Confirm your password';
+                      if (v != passwordController.text) return 'Passwords do not match';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _onRegister,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        child: Text('Register', style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
