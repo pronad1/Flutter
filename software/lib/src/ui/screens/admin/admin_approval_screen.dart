@@ -1,4 +1,3 @@
-// lib/src/ui/screens/admin/admin_approval_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -12,23 +11,33 @@ class AdminApprovalScreen extends StatefulWidget {
 class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   bool _showPendingOnly = true;
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> _query() {
+  // Stream for the list (pending/all)
+  Stream<QuerySnapshot<Map<String, dynamic>>> _listStream() {
     final col = FirebaseFirestore.instance.collection('users');
     return _showPendingOnly
-        ? col.where('approved', isEqualTo: false).snapshots()
-        : col.limit(50).snapshots();
+        ? col.where('approved', isEqualTo: false).orderBy('createdAt', descending: true).snapshots()
+        : col.orderBy('createdAt', descending: true).limit(100).snapshots();
   }
 
   Future<void> _approveUser(String uid) async {
     await FirebaseFirestore.instance.collection('users').doc(uid).update({
       'approved': true,
       'approvedAt': FieldValue.serverTimestamp(),
-      'approvedBy': 'admin', // set actual admin identity if you track it
     });
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User approved')),
+    );
   }
+
+  // Small safe getter toStringLower
+  String _str(Object? v) => (v ?? '').toString();
+  String _lower(Object? v) => _str(v).toLowerCase();
 
   @override
   Widget build(BuildContext context) {
+    final usersCol = FirebaseFirestore.instance.collection('users');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin – Approvals'),
@@ -42,59 +51,150 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _query(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            // If rules block the read, you’ll see PERMISSION_DENIED here
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'Error loading users: ${snapshot.error}\n\n'
-                      'Tip: Ensure your admin user doc has isAdmin: true and rules permit admin reads.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
 
-          final docs = snapshot.data?.docs ?? [];
-          if (docs.isEmpty) {
-            return Center(
-              child: Text(_showPendingOnly
-                  ? 'No pending users.'
-                  : 'No users found (or limited by rules / query).'),
-            );
-          }
+      // We use two streams:
+      // 1) Top counts: all users stream -> compute totals in memory (robust across platforms, case-insensitive).
+      // 2) List: pending/all stream.
+      body: Column(
+        children: [
+          // ---- COUNTS HEADER (LIVE) ----
+          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: usersCol.snapshots(),
+            builder: (context, snap) {
+              if (snap.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Failed to load counts: ${snap.error}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                );
+              }
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: LinearProgressIndicator(),
+                );
+              }
 
-          return ListView.separated(
-            itemCount: docs.length,
-            separatorBuilder: (_, __) => const Divider(height: 0),
-            itemBuilder: (context, i) {
-              final user = docs[i].data();
-              final uid = docs[i].id;
-              final name = (user['name'] ?? '') as String;
-              final email = (user['email'] ?? '') as String;
-              final role = (user['role'] ?? '') as String;
-              final approved = (user['approved'] as bool?) ?? false;
+              final docs = snap.data?.docs ?? const [];
+              int total = docs.length;
+              int donors = 0;
+              int seekers = 0;
 
-              return ListTile(
-                title: Text(name.isEmpty ? '(No name)' : name),
-                subtitle: Text([email, if (role.isNotEmpty) role].join(' • ')),
-                trailing: approved
-                    ? const Icon(Icons.verified, color: Colors.green)
-                    : ElevatedButton(
-                  onPressed: () => _approveUser(uid),
-                  child: const Text('Approve'),
+              for (final d in docs) {
+                final role = _lower(d.data()['role']);
+                if (role == 'donor') donors++;
+                else if (role == 'seeker') seekers++;
+              }
+
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _CountChip(label: 'Total', value: total),
+                    _CountChip(label: 'Donors', value: donors),
+                    _CountChip(label: 'Seekers', value: seekers),
+                  ],
                 ),
               );
             },
-          );
-        },
+          ),
+
+          const Divider(height: 0),
+
+          // ---- USERS LIST (PENDING / ALL) ----
+          Expanded(
+            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: _listStream(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        'Error loading users: ${snapshot.error}\n\n'
+                            'Tip: Ensure your admin user doc has isAdmin: true and rules permit admin reads.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final docs = snapshot.data?.docs ?? [];
+                if (docs.isEmpty) {
+                  return Center(
+                    child: Text(_showPendingOnly ? 'No pending users.' : 'No users found.'),
+                  );
+                }
+
+                return ListView.separated(
+                  itemCount: docs.length,
+                  separatorBuilder: (_, __) => const Divider(height: 0),
+                  itemBuilder: (context, i) {
+                    final user = docs[i].data();
+                    final uid = docs[i].id;
+                    final name = _str(user['name']);
+                    final email = _str(user['email']);
+                    final role  = _str(user['role']);
+                    final approved = (user['approved'] as bool?) ?? false;
+
+                    return ListTile(
+                      title: Text(name.isEmpty ? '(No name)' : name),
+                      subtitle: Text([
+                        if (email.isNotEmpty) email,
+                        if (role.isNotEmpty) role,
+                      ].join(' • ')),
+                      trailing: approved
+                          ? const Icon(Icons.verified, color: Colors.green)
+                          : ElevatedButton(
+                        onPressed: () => _approveUser(uid),
+                        child: const Text('Approve'),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ----- SMALL WIDGET FOR COUNT BADGES -----
+class _CountChip extends StatelessWidget {
+  final String label;
+  final int value;
+  const _CountChip({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return Chip(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              value.toString(),
+              style: TextStyle(color: color, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
       ),
     );
   }
