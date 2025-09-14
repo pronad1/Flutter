@@ -11,7 +11,7 @@ class loginScreen extends StatefulWidget {
 
 
 class _loginScreenState extends State<loginScreen> {
-  Map<String, String> formValues = {"email": "", "password": ""};
+  Map<String, String> formValues = {"email":"", "password":""};
   bool loading = false;
 
   void inputOnChange(String mapKey, String textValue) {
