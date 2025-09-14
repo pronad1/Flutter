@@ -1,7 +1,5 @@
 // lib/src/screens/signup_screen.dart
 import 'package:flutter/material.dart';
-
-// Your import path as you provided:
 import 'package:software/src/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -181,6 +179,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Register button
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : SizedBox(
@@ -192,6 +191,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         child: Text('Register', style: TextStyle(fontSize: 16)),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Extra navigation buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/home');
+                        },
+                        icon: const Icon(Icons.home),
+                        label: const Text('Home'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        icon: const Icon(Icons.login),
+                        label: const Text('Login'),
+                      ),
+                    ],
                   ),
                 ],
               ),
