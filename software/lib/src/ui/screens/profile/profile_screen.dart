@@ -64,15 +64,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  String _str(Object? v) => (v ?? '').toString();
-  String _lower(Object? v) => _str(v).toLowerCase();
-
   @override
   Widget build(BuildContext context) {
-    final uid = auth.currentUser?.uid;
-    final currentEmail = auth.currentUser?.email ?? '';
-
-    if (uid == null) {
+    final user = auth.currentUser;
+    if (user == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/login');
       });
@@ -81,8 +76,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    final emailVerified = auth.currentUser!.emailVerified;
-    final isHardcodedAdmin = currentEmail.toLowerCase() == kAdminEmail.toLowerCase();
+    final emailVerified = user.emailVerified;
+    final isHardcodedAdmin = user.email?.toLowerCase() == kAdminEmail.toLowerCase();
 
     return Scaffold(
       appBar: AppBar(
@@ -96,44 +91,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: firestore.collection('users').doc(uid).snapshots(),
+        stream: firestore.collection('users').doc(user.uid).snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && !isHardcodedAdmin) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError && !isHardcodedAdmin) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if ((!snapshot.hasData || !(snapshot.data?.exists ?? false)) && !isHardcodedAdmin) {
-            return const Center(child: Text('No profile data found.'));
-          }
-
           final data = snapshot.data?.data() ?? <String, dynamic>{};
 
-          final name = (data['name'] ?? (isHardcodedAdmin ? 'Admin' : '')) as String;
-          final email = (data['email'] ?? currentEmail) as String;
-          final approved = isHardcodedAdmin ? true : (data['approved'] as bool?) ?? false;
-          final isAdminFirestore = (data['isAdmin'] as bool?) ?? false;
-          final role = isHardcodedAdmin ? 'Admin' : (data['role'] as String?) ?? '';
+          final name = (data['name'] ?? (isHardcodedAdmin ? 'Admin' : '')).toString();
+          final email = (data['email'] ?? user.email).toString();
+          final bio = (data['bio'] ?? '').toString();
+          final approved = (data['approved'] as bool?) ?? false;
+          final role = (data['role'] ?? (isHardcodedAdmin ? 'Admin' : '')).toString();
+          final photo = isHardcodedAdmin
+              ? kAdminPhotoUrl
+              : (data['profilePicUrl'] ?? '');
 
-          // default to Firestore photo…
-          String photo = (data['profilePicUrl'] ?? '') as String;
-          // …but force Google Drive photo for the admin on all devices
-          if (isHardcodedAdmin) {
-            photo = kAdminPhotoUrl;
-          }
-
-          final showAdminStuff = isHardcodedAdmin || isAdminFirestore;
+          final showAdminStuff = isHardcodedAdmin || role.toLowerCase() == 'admin';
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Email verification banner for non-admins only
+                // Email verification banner for users
                 if (!showAdminStuff && !emailVerified)
                   Card(
                     color: Colors.amber.shade50,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
@@ -165,26 +147,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
 
-                const SizedBox(height: 8),
-
-                // Avatar (admin uses Drive photo)
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: photo.isNotEmpty ? NetworkImage(photo) : null,
-                  child: photo.isEmpty ? const Icon(Icons.person, size: 50) : null,
-                ),
                 const SizedBox(height: 16),
 
+                // Profile avatar
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage:
+                  photo.isNotEmpty ? NetworkImage(photo) : null,
+                  child: photo.isEmpty
+                      ? const Icon(Icons.person, size: 50)
+                      : null,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Name & Email
                 Text(
                   name.isEmpty ? '(No name)' : name,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 8),
-
+                const SizedBox(height: 4),
                 Text(email, style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 8),
+                if (bio.isNotEmpty)
+                  Text(
+                    bio,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
 
-                // Role + Approval + Email status chips
+                const SizedBox(height: 16),
+
+                // Role + approval + email verified chips
                 Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 8,
@@ -196,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         avatar: const Icon(Icons.badge, size: 18),
                       ),
                     Chip(
-                      label: Text(approved ? 'Approved' : 'Pending approval'),
+                      label: Text(approved ? 'Approved' : 'Pending'),
                       avatar: Icon(
                         approved ? Icons.verified : Icons.hourglass_bottom,
                         size: 18,
@@ -204,7 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     Chip(
-                      label: Text(emailVerified ? 'Email verified' : 'Email not verified'),
+                      label: Text(emailVerified ? 'Email Verified' : 'Email Not Verified'),
                       avatar: Icon(
                         emailVerified ? Icons.mark_email_read : Icons.mark_email_unread,
                         size: 18,
@@ -221,31 +216,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 16),
 
-                // ===== ADMIN STATS ON PROFILE (unchanged, live counts) =====
-                if (showAdminStuff) _AdminStatsCard(lower: _lower),
+                // Admin stats
+                if (showAdminStuff)
+                  _AdminStatsCard(),
 
                 const SizedBox(height: 20),
 
-                // Admin-only button to open approval panel
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/edit-profile');
+                        },
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Edit Profile'),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
                 if (showAdminStuff)
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () => Navigator.pushNamed(context, '/admin-approval'),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/admin-approval'),
                       icon: const Icon(Icons.verified_user),
                       label: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Text('Open Admin Approval Panel'),
                       ),
-                    ),
-                  ),
-
-                if (!showAdminStuff)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      'Access is granted after email verification and admin approval.',
-                      textAlign: TextAlign.center,
                     ),
                   ),
               ],
@@ -257,12 +261,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-/// A live stats card for Admins: Total / Donors / Seekers / Pending
+/// Admin stats card
 class _AdminStatsCard extends StatelessWidget {
-  final String Function(Object?) lower;
-  const _AdminStatsCard({required this.lower});
-
-  String _str(Object? v) => (v ?? '').toString();
+  const _AdminStatsCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +296,7 @@ class _AdminStatsCard extends StatelessWidget {
 
             for (final d in docs) {
               final data = d.data();
-              final role = lower(data['role']);
+              final role = (data['role'] ?? '').toString().toLowerCase();
               final approved = (data['approved'] as bool?) ?? false;
 
               if (role == 'donor') donors++;
@@ -333,7 +334,7 @@ class _AdminStatsCard extends StatelessWidget {
 class _StatChip extends StatelessWidget {
   final String label;
   final int value;
-  const _StatChip({required this.label, required this.value});
+  const _StatChip({required this.label, required this.value, super.key});
 
   @override
   Widget build(BuildContext context) {

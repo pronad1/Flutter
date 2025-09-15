@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../ui/screens/auth/login_screen.dart';
 import '../ui/screens/auth/signup_screen.dart';
+import '../ui/screens/edit_profile_screen.dart';
 import '../ui/screens/profile/profile_screen.dart';
 import '../ui/screens/splash_screen.dart';
 import '../ui/screens/admin/admin_approval_screen.dart';
@@ -13,20 +14,25 @@ class Routes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/splash':
-        return MaterialPageRoute(builder: (_) => SplashScreen());
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
       case '/login':
         return MaterialPageRoute(builder: (_) => LoginScreen());
       case '/signup':
-        return MaterialPageRoute(builder: (_) => SignUpScreen());
+        return MaterialPageRoute(builder: (_) => const SignUpScreen());
       case '/profile':
-        return MaterialPageRoute(builder: (_) => ProfileScreen());
+        return MaterialPageRoute(builder: (_) => const ProfileScreen());
+      case '/edit-profile': // ✅ New route for editing profile
+        return MaterialPageRoute(builder: (_) => const EditProfileScreen());
 
     // Admin approval (gated)
       case '/admin-approval':
         return MaterialPageRoute(builder: (_) => _AdminGate());
 
       default:
-        return MaterialPageRoute(builder: (_) => SplashScreen());
+        return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: Text('No route defined for this page')),
+            ));
     }
   }
 }
@@ -47,11 +53,8 @@ class _AdminGate extends StatelessWidget {
 
     // Normal path: check Firestore flag
     try {
-      final snap = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-
+      final snap =
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final data = snap.data();
       final flag = (data?['isAdmin'] as bool?) ?? false;
       return flag;
@@ -66,14 +69,14 @@ class _AdminGate extends StatelessWidget {
       future: _isAdmin(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return Scaffold(
+          return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
         if (snapshot.data == true) {
-          return AdminApprovalScreen();
+          return const AdminApprovalScreen();
         } else {
-          return _NotAuthorizedScreen();
+          return const _NotAuthorizedScreen();
         }
       },
     );
@@ -86,16 +89,16 @@ class _NotAuthorizedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Not Authorized')),
+      appBar: AppBar(title: const Text('Not Authorized')),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('You are not authorized to view this page.'),
-            SizedBox(height: 12),
+            const Text('You are not authorized to view this page.'),
+            const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Go Back'),
+              child: const Text('Go Back'),
             ),
           ],
         ),

@@ -30,7 +30,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
     );
   }
 
-  // Small safe getter toStringLower
+  // Safe getters
   String _str(Object? v) => (v ?? '').toString();
   String _lower(Object? v) => _str(v).toLowerCase();
 
@@ -52,12 +52,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
         ],
       ),
 
-      // We use two streams:
-      // 1) Top counts: all users stream -> compute totals in memory (robust across platforms, case-insensitive).
-      // 2) List: pending/all stream.
       body: Column(
         children: [
-          // ---- COUNTS HEADER (LIVE) ----
+          // ---- COUNTS HEADER ----
           StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: usersCol.snapshots(),
             builder: (context, snap) {
@@ -104,7 +101,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
 
           const Divider(height: 0),
 
-          // ---- USERS LIST (PENDING / ALL) ----
+          // ---- USERS LIST ----
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _listStream(),
@@ -142,13 +139,39 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                     final email = _str(user['email']);
                     final role  = _str(user['role']);
                     final approved = (user['approved'] as bool?) ?? false;
+                    final emailVerified = (user['emailVerified'] as bool?) ?? false;
+                    final isAdmin = (user['isAdmin'] as bool?) ?? false;
 
                     return ListTile(
                       title: Text(name.isEmpty ? '(No name)' : name),
-                      subtitle: Text([
-                        if (email.isNotEmpty) email,
-                        if (role.isNotEmpty) role,
-                      ].join(' • ')),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (email.isNotEmpty) Text(email),
+                          if (role.isNotEmpty) Text(role),
+
+                          // ✅ Only Email verified + Admin
+                          Row(
+                            children: [
+                              if (emailVerified)
+                                Chip(
+                                  avatar: const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                                  label: const Text('Email verified'),
+                                  backgroundColor: Colors.green.withOpacity(0.1),
+                                  labelStyle: const TextStyle(color: Colors.green),
+                                ),
+                              if (emailVerified && isAdmin) const SizedBox(width: 6),
+                              if (isAdmin)
+                                Chip(
+                                  avatar: const Icon(Icons.admin_panel_settings, color: Colors.purple, size: 18),
+                                  label: const Text('Admin'),
+                                  backgroundColor: Colors.purple.withOpacity(0.1),
+                                  labelStyle: const TextStyle(color: Colors.purple),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                       trailing: approved
                           ? const Icon(Icons.verified, color: Colors.green)
                           : ElevatedButton(
@@ -167,7 +190,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   }
 }
 
-// ----- SMALL WIDGET FOR COUNT BADGES -----
+// ----- COUNTER CHIP -----
 class _CountChip extends StatelessWidget {
   final String label;
   final int value;
