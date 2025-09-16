@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../widgets/app_bottom_nav.dart';
 
 class AdminApprovalScreen extends StatefulWidget {
   const AdminApprovalScreen({super.key});
@@ -11,28 +12,37 @@ class AdminApprovalScreen extends StatefulWidget {
 class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   bool _showPendingOnly = true;
 
-  // Stream for the list (pending/all)
+  /// Stream for the list (pending/all)
   Stream<QuerySnapshot<Map<String, dynamic>>> _listStream() {
     final col = FirebaseFirestore.instance.collection('users');
+    // NOTE: If you don't have a createdAt field on all docs yet, you can remove orderBy temporarily.
     return _showPendingOnly
         ? col.where('approved', isEqualTo: false).orderBy('createdAt', descending: true).snapshots()
         : col.orderBy('createdAt', descending: true).limit(100).snapshots();
   }
 
   Future<void> _approveUser(String uid) async {
-    await FirebaseFirestore.instance.collection('users').doc(uid).update({
-      'approved': true,
-      'approvedAt': FieldValue.serverTimestamp(),
-    });
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User approved')),
-    );
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'approved': true,
+        'approvedAt': FieldValue.serverTimestamp(),
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User approved')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to approve: $e')),
+      );
+    }
   }
 
   // Safe getters
   String _str(Object? v) => (v ?? '').toString();
   String _lower(Object? v) => _str(v).toLowerCase();
+  bool _bool(Object? v) => (v is bool) ? v : false;
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +92,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
               for (final d in docs) {
                 final role = _lower(d.data()['role']);
                 if (role == 'donor') donors++;
-                else if (role == 'seeker') seekers++;
+                if (role == 'seeker') seekers++;
               }
 
               return Padding(
@@ -135,12 +145,13 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                   itemBuilder: (context, i) {
                     final user = docs[i].data();
                     final uid = docs[i].id;
+
                     final name = _str(user['name']);
                     final email = _str(user['email']);
                     final role  = _str(user['role']);
-                    final approved = (user['approved'] as bool?) ?? false;
-                    final emailVerified = (user['emailVerified'] as bool?) ?? false;
-                    final isAdmin = (user['isAdmin'] as bool?) ?? false;
+                    final approved = _bool(user['approved']);
+                    final emailVerified = _bool(user['emailVerified']);
+                    final isAdmin = _bool(user['isAdmin']);
 
                     return ListTile(
                       title: Text(name.isEmpty ? '(No name)' : name),
@@ -149,9 +160,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                         children: [
                           if (email.isNotEmpty) Text(email),
                           if (role.isNotEmpty) Text(role),
-
-                          // ✅ Only Email verified + Admin
-                          Row(
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 6,
                             children: [
                               if (emailVerified)
                                 Chip(
@@ -160,7 +171,6 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
                                   backgroundColor: Colors.green.withOpacity(0.1),
                                   labelStyle: const TextStyle(color: Colors.green),
                                 ),
-                              if (emailVerified && isAdmin) const SizedBox(width: 6),
                               if (isAdmin)
                                 Chip(
                                   avatar: const Icon(Icons.admin_panel_settings, color: Colors.purple, size: 18),
@@ -186,6 +196,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
           ),
         ],
       ),
+
+      // ✅ Show global bottom nav here as well
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 }

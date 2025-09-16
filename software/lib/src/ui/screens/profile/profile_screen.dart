@@ -2,8 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../widgets/app_bottom_nav.dart';
 
-// 🔑 Hardcoded admin identity + Google Drive photo (direct link)
+/// Hardcoded admin identity + hosted photo URL (as in your project)
 const String kAdminEmail = 'ug2102049@cse.pstu.ac.bd';
 const String kAdminPhotoUrl =
     'https://raw.githubusercontent.com/pronad1/pronad1/main/465649458_1111994083915233_1094865271827201379_n.jpg';
@@ -18,7 +19,10 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final auth = FirebaseAuth.instance;
   final firestore = FirebaseFirestore.instance;
+
   bool _busy = false;
+  // 0=Home, 1=Role/Admin, 2=Search, 3=Edit, 4=Profile (this screen)
+  int _currentIndex = 4;
 
   Future<void> _signOut(BuildContext context) async {
     await auth.signOut();
@@ -53,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _busy = true);
       await user.reload();
       if (!mounted) return;
-      setState(() {}); // rebuild to reflect latest emailVerified
+      setState(() {}); // rebuild with latest emailVerified
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,16 +68,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _goToTab({required int index, required String role}) {
+    setState(() => _currentIndex = index);
+
+    // Use pushNamed (NOT replacement) so Back returns to previous page
+    switch (index) {
+      case 0: // Home
+        _safeNav('/home');
+        break;
+      case 1: // Role/Admin
+        final r = role.trim().toLowerCase();
+        if (r == 'admin') {
+          _safeNav('/admin-approval'); // admin approval panel
+        } else if (r == 'donor') {
+          _safeNav('/donor');
+        } else if (r == 'seeker') {
+          _safeNav('/seeker');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No role set yet. Please edit your profile.')),
+          );
+        }
+        break;
+      case 2: // Search
+        _safeNav('/search');
+        break;
+      case 3: // Edit Profile
+        _safeNav('/edit-profile');
+        break;
+      case 4: // Profile (stay here)
+        break;
+    }
+  }
+
+  void _safeNav(String route) {
+    Navigator.of(context).pushNamed(route);
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = auth.currentUser;
     if (user == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
       });
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final emailVerified = user.emailVerified;
@@ -82,40 +121,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Profile'),
+        // Keep default leading so back appears when navigated from somewhere else
         actions: [
           IconButton(
-            tooltip: 'Sign Out',
-            icon: const Icon(Icons.logout),
+            tooltip: 'Sign out',
+            icon: const Icon(Icons.logout_rounded),
             onPressed: () => _signOut(context),
           ),
         ],
       ),
+
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: firestore.collection('users').doc(user.uid).snapshots(),
         builder: (context, snapshot) {
           final data = snapshot.data?.data() ?? <String, dynamic>{};
 
           final name = (data['name'] ?? (isHardcodedAdmin ? 'Admin' : '')).toString();
-          final email = (data['email'] ?? user.email).toString();
+          final email = (data['email'] ?? user.email ?? '').toString();
           final bio = (data['bio'] ?? '').toString();
           final approved = (data['approved'] as bool?) ?? false;
           final role = (data['role'] ?? (isHardcodedAdmin ? 'Admin' : '')).toString();
-          final photo = isHardcodedAdmin
-              ? kAdminPhotoUrl
-              : (data['profilePicUrl'] ?? '');
+          final photo = isHardcodedAdmin ? kAdminPhotoUrl : (data['profilePicUrl'] ?? '');
 
           final showAdminStuff = isHardcodedAdmin || role.toLowerCase() == 'admin';
+          final roleTitle = _rolePretty(role);
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
             child: Column(
               children: [
-                // Email verification banner for users
+                // Email verification banner (non-admin only)
                 if (!showAdminStuff && !emailVerified)
                   Card(
                     color: Colors.amber.shade50,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
@@ -135,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: ElevatedButton(
+                                child: FilledButton(
                                   onPressed: _busy ? null : _refreshEmailStatus,
                                   child: const Text('I Verified — Refresh'),
                                 ),
@@ -149,119 +188,164 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 16),
 
-                // Profile avatar
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage:
-                  photo.isNotEmpty ? NetworkImage(photo) : null,
-                  child: photo.isEmpty
-                      ? const Icon(Icons.person, size: 50)
-                      : null,
-                ),
+                // Avatar with initials fallback
+                _Avatar(photoUrl: photo, name: name),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // Name & Email
                 Text(
                   name.isEmpty ? '(No name)' : name,
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
-                Text(email, style: const TextStyle(fontSize: 16)),
+                Text(
+                  email,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                ),
+
                 const SizedBox(height: 8),
-                if (bio.isNotEmpty)
-                  Text(
-                    bio,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
 
-                const SizedBox(height: 16),
+                // Bio
+                Text(
+                  bio.isNotEmpty ? bio : 'Sorry is Nothing without change',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black45),
+                ),
 
-                // Role + approval + email verified chips
+                const SizedBox(height: 14),
+
+                // Badges: role / approval / email
                 Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    if (role.isNotEmpty)
-                      Chip(
-                        label: Text(role),
-                        avatar: const Icon(Icons.badge, size: 18),
-                      ),
-                    Chip(
-                      label: Text(approved ? 'Approved' : 'Pending'),
-                      avatar: Icon(
-                        approved ? Icons.verified : Icons.hourglass_bottom,
-                        size: 18,
-                        color: approved ? Colors.green : null,
-                      ),
+                    if (roleTitle.isNotEmpty)
+                      const _BadgeChip(icon: Icons.badge_outlined, label: 'Role'),
+                    if (roleTitle.isNotEmpty)
+                      _BadgeChip(icon: Icons.person_pin_circle_rounded, label: roleTitle),
+                    _BadgeChip(
+                      icon: approved ? Icons.verified_rounded : Icons.hourglass_bottom_rounded,
+                      label: approved ? 'Approved' : 'Pending',
+                      color: approved ? Colors.green : null,
                     ),
-                    Chip(
-                      label: Text(emailVerified ? 'Email Verified' : 'Email Not Verified'),
-                      avatar: Icon(
-                        emailVerified ? Icons.mark_email_read : Icons.mark_email_unread,
-                        size: 18,
-                        color: emailVerified ? Colors.green : null,
-                      ),
+                    _BadgeChip(
+                      icon: emailVerified ? Icons.mark_email_read_rounded : Icons.mark_email_unread_rounded,
+                      label: emailVerified ? 'Email Verified' : 'Email Not Verified',
+                      color: emailVerified ? Colors.green : null,
                     ),
                     if (showAdminStuff)
-                      const Chip(
-                        label: Text('Admin'),
-                        avatar: Icon(Icons.admin_panel_settings, size: 18),
-                      ),
+                      const _BadgeChip(icon: Icons.admin_panel_settings_rounded, label: 'Admin'),
                   ],
                 ),
 
                 const SizedBox(height: 16),
 
-                // Admin stats
-                if (showAdminStuff)
-                  _AdminStatsCard(),
+                // Admin-only system stats
+                if (showAdminStuff) const _AdminStatsCard(),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
 
-                // Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/edit-profile');
+                // Quick actions
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.add_box_outlined),
+                        title: Text(
+                          role.toLowerCase() == 'donor' ? 'Post a new donation' : 'Create a request',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          // TODO: navigate to create item/request screen
                         },
-                        icon: const Icon(Icons.edit),
-                        label: const Text('Edit Profile'),
                       ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                if (showAdminStuff)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, '/admin-approval'),
-                      icon: const Icon(Icons.verified_user),
-                      label: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text('Open Admin Approval Panel'),
+                      const Divider(height: 0),
+                      const ListTile(
+                        leading: Icon(Icons.history_rounded),
+                        title: Text('Activity history'),
+                        trailing: Icon(Icons.chevron_right),
                       ),
-                    ),
+                    ],
                   ),
+                ),
               ],
             ),
           );
         },
       ),
+
+      // ✅ Use the shared bottom navigation so it's consistent across all main pages
+      bottomNavigationBar: const AppBottomNav(currentIndex: 4),
+    );
+  }
+
+  String _rolePretty(String roleRaw) {
+    final r = roleRaw.trim().toLowerCase();
+    if (r == 'donor') return 'Donor';
+    if (r == 'seeker') return 'Seeker';
+    if (r == 'admin') return 'Admin';
+    return '';
+  }
+}
+
+/// --- UI helpers --------------------------------------------------------------
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.photoUrl, required this.name});
+  final String photoUrl;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = _initialsFromName(name);
+
+    if (photoUrl.isNotEmpty) {
+      return CircleAvatar(radius: 50, backgroundImage: NetworkImage(photoUrl));
+    }
+
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: Text(
+        initials,
+        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
+  String _initialsFromName(String fullName) {
+    final parts = fullName.trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) {
+      final s = parts.first;
+      return s.characters.take(2).toString().toUpperCase();
+    }
+    return (parts.first.characters.first + parts.last.characters.first).toUpperCase();
+  }
+}
+
+class _BadgeChip extends StatelessWidget {
+  const _BadgeChip({required this.icon, required this.label, this.color});
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Chip(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      avatar: Icon(icon, size: 18, color: color),
+      label: Text(label),
     );
   }
 }
 
-/// Admin stats card
+/// --- Admin stats card --------------------------------------------------------
+
 class _AdminStatsCard extends StatelessWidget {
   const _AdminStatsCard({super.key});
 
@@ -278,14 +362,10 @@ class _AdminStatsCard extends StatelessWidget {
           stream: usersCol.snapshots(),
           builder: (context, snap) {
             if (snap.hasError) {
-              return Text(
-                'Failed to load stats: ${snap.error}',
-                style: const TextStyle(color: Colors.red),
-              );
+              return Text('Failed to load stats: ${snap.error}',
+                  style: const TextStyle(color: Colors.red));
             }
-            if (!snap.hasData) {
-              return const LinearProgressIndicator();
-            }
+            if (!snap.hasData) return const LinearProgressIndicator();
 
             final docs = snap.data!.docs;
             final total = docs.length;
@@ -298,7 +378,6 @@ class _AdminStatsCard extends StatelessWidget {
               final data = d.data();
               final role = (data['role'] ?? '').toString().toLowerCase();
               final approved = (data['approved'] as bool?) ?? false;
-
               if (role == 'donor') donors++;
               if (role == 'seeker') seekers++;
               if (!approved) pending++;
@@ -307,10 +386,7 @@ class _AdminStatsCard extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'System Stats',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
+                const Text('System Stats', style: TextStyle(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
