@@ -1,6 +1,11 @@
+// lib/src/config/routes.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Screens that need routing here
+import '../ui/screens/edit_item_screen.dart';
+import '../ui/screens/create_item_screen.dart';
 
 // Auth & core
 import '../ui/screens/admin/admin_approval_screen.dart';
@@ -11,7 +16,7 @@ import '../ui/screens/edit_profile_screen.dart';
 import '../ui/screens/profile/profile_screen.dart';
 import '../ui/screens/home_screen.dart';
 
-// Role dashboards (ALIased to avoid name conflicts)
+// Role dashboards (aliased to avoid name conflicts)
 import '../ui/screens/role/donor_dashboard.dart' as donor_screen;
 import '../ui/screens/role/seeker_dashboard.dart' as seeker_screen;
 
@@ -30,6 +35,8 @@ class Routes {
   static const profile = '/profile';
   static const editProfile = '/edit-profile';
   static const adminApproval = '/admin-approval';
+  static const createItem = '/create-item';
+  static const editItem = '/edit-item'; // ✅ NEW
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -64,6 +71,14 @@ class Routes {
       case adminApproval:
         return MaterialPageRoute(builder: (_) => const _AdminGate());
 
+      case createItem:
+        return MaterialPageRoute(builder: (_) => const CreateItemScreen());
+
+    // ✅ NEW: edit-item expects a String itemId in `settings.arguments`
+      case editItem:
+        final itemId = settings.arguments as String;
+        return MaterialPageRoute(builder: (_) => EditItemScreen(itemId: itemId));
+
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
@@ -75,7 +90,6 @@ class Routes {
 }
 
 /// Gate that allows only admins to access AdminApprovalScreen.
-/// Checks hardcoded email OR Firestore users/{uid}.isAdmin == true
 class _AdminGate extends StatelessWidget {
   const _AdminGate({super.key});
 
@@ -85,7 +99,6 @@ class _AdminGate extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
 
-    // Dev shortcut: allow specific email
     if ((user.email ?? '').toLowerCase() == _hardcodedAdminEmail) return true;
 
     try {
