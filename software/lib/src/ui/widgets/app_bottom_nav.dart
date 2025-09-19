@@ -1,33 +1,59 @@
+// lib/src/ui/widgets/app_bottom_nav.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../config/routes.dart';
 
 /// Shared bottom navigation used across Home / Role / Search / Edit / Profile
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
-    required this.currentIndex,
+    this.currentIndex,
   });
 
   /// 0=Home, 1=Role/Admin, 2=Search, 3=Edit, 4=Profile
-  final int currentIndex;
+  /// If null, we’ll try to infer from the current route.
+  final int? currentIndex;
+
+  static const _routeIndex = <String, int>{
+    Routes.home: 0,
+    Routes.donor: 1,
+    Routes.seeker: 1,
+    Routes.adminApproval: 1,
+    Routes.search: 2,
+    Routes.editProfile: 3,
+    Routes.profile: 4,
+  };
 
   @override
   Widget build(BuildContext context) {
+    // Hide the bottom nav on auth/splash routes
+    final routeName = ModalRoute.of(context)?.settings.name ?? '';
+    const hideOn = {Routes.splash, Routes.login, Routes.signup};
+    if (hideOn.contains(routeName)) return const SizedBox.shrink();
+
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
+      // Not signed in → don't show the bar
       return const SizedBox.shrink();
     }
+
+    // Compute a safe selected index
+    final inferredIndex = _routeIndex[routeName];
+    final selectedIndex = (currentIndex ?? inferredIndex ?? 0).clamp(0, 4);
 
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
       builder: (context, snap) {
-        final role = ((snap.data?.data() ?? {})['role'] ?? '').toString();
-        final roleTitle = _rolePretty(role).isEmpty ? 'Role' : _rolePretty(role);
+        final data = snap.data?.data() ?? const {};
+        final roleRaw = (data['role'] ?? '').toString();
+        final roleTitle = _rolePretty(roleRaw).isEmpty ? 'Role' : _rolePretty(roleRaw);
 
         return NavigationBar(
-          selectedIndex: currentIndex,
-          onDestinationSelected: (i) => _goToTab(context, i, role),
+          selectedIndex: selectedIndex,
+          onDestinationSelected: (i) =>
+              _goToTab(context, i, roleRaw, currentRoute: routeName),
           destinations: [
             const NavigationDestination(
               icon: Icon(Icons.home_outlined),
@@ -60,35 +86,44 @@ class AppBottomNav extends StatelessWidget {
     );
   }
 
-  void _goToTab(BuildContext context, int index, String role) {
+  void _goToTab(
+      BuildContext context,
+      int index,
+      String role, {
+        required String currentRoute,
+      }) {
+    String targetRoute = currentRoute;
+
     switch (index) {
       case 0:
-        Navigator.pushNamed(context, '/home');
+        targetRoute = Routes.home;
         break;
       case 1:
         final r = role.trim().toLowerCase();
         if (r == 'admin') {
-          Navigator.pushNamed(context, '/admin-approval');
+          targetRoute = Routes.adminApproval;
         } else if (r == 'donor') {
-          Navigator.pushNamed(context, '/donor');
+          targetRoute = Routes.donor;
         } else if (r == 'seeker') {
-          Navigator.pushNamed(context, '/seeker');
+          targetRoute = Routes.seeker;
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No role set yet. Please edit your profile.')),
-          );
+          // No role yet → send to Edit Profile to pick a role
+          targetRoute = Routes.editProfile;
         }
         break;
       case 2:
-        Navigator.pushNamed(context, '/search');
+        targetRoute = Routes.search;
         break;
       case 3:
-        Navigator.pushNamed(context, '/edit-profile');
+        targetRoute = Routes.editProfile;
         break;
       case 4:
-        Navigator.pushNamed(context, '/profile');
+        targetRoute = Routes.profile;
         break;
     }
+
+    if (targetRoute == currentRoute) return; // avoid duplicate navigation
+    Navigator.pushNamedAndRemoveUntil(context, targetRoute, (r) => false);
   }
 
   String _rolePretty(String roleRaw) {

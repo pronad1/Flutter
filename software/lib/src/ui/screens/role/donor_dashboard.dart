@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../widgets/app_bottom_nav.dart';
+
 class DonorDashboard extends StatefulWidget {
   const DonorDashboard({super.key});
 
@@ -277,11 +279,12 @@ class _DonorDashboardState extends State<DonorDashboard> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
+        floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.pushNamed(context, '/create-item'),
         icon: const Icon(Icons.add),
         label: const Text('Post Item'),
-      ),
+        ),
     );
   }
 }

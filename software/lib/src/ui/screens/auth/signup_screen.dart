@@ -200,7 +200,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: [
                       OutlinedButton.icon(
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/home');
+                          Navigator.pushNamedAndRemoveUntil(context, '/splash', (route) => false);
                         },
                         icon: const Icon(Icons.home),
                         label: const Text('Home'),

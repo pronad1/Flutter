@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/supabase_image_service.dart';
+import '../widgets/app_bottom_nav.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -236,6 +237,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Profile')),
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -306,6 +308,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
     );
   }
 }

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../ui/screens/welcome_screen.dart';
 
 // Screens that need routing here
 import '../ui/screens/edit_item_screen.dart';
@@ -25,6 +26,7 @@ import '../ui/screens/search_screen.dart';
 
 class Routes {
   // Route name constants
+  static const welcome = '/welcome';
   static const splash = '/splash';
   static const login = '/login';
   static const signup = '/signup';
@@ -40,6 +42,9 @@ class Routes {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case welcome:
+        return MaterialPageRoute(builder: (_) => const WelcomeScreen());
+
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
 

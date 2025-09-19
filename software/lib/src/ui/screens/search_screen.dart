@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/app_bottom_nav.dart';
+
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -217,6 +219,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
 }

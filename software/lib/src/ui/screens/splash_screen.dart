@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../config/theme.dart';
+// If theme.dart is unused here, you can remove this import safely.
+// import '../../config/theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,8 +13,8 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
+  late final AnimationController _fadeController;
+  late final Animation<double> _fadeAnimation;
 
   final ScrollController _scrollController = ScrollController();
 
@@ -35,22 +36,25 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _navigateBasedOnAuth() {
     final user = FirebaseAuth.instance.currentUser;
+    if (!mounted) return;
+
     if (user != null) {
-      Navigator.pushReplacementNamed(context, '/home');
+      // User is signed in → go straight to Home and clear the stack
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } else {
+      // Not signed in → go to Login (back button returns here)
       Navigator.pushNamed(context, '/login');
     }
   }
 
   void _scrollToSection(GlobalKey key) {
-    final context = key.currentContext;
-    if (context != null) {
-      Scrollable.ensureVisible(
-        context,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    }
+    final ctx = key.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -90,16 +94,11 @@ class _SplashScreenState extends State<SplashScreen>
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.green,
-              ),
-              child: const Text(
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.green),
+              child: Text(
                 'Reuse Hub Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
             ListTile(
@@ -157,33 +156,38 @@ class _SplashScreenState extends State<SplashScreen>
           SingleChildScrollView(
             controller: _scrollController,
             child: Padding(
-              padding:
-              EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 20),
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: 20,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   FadeTransition(
                     opacity: _fadeAnimation,
-                    child: Text(
+                    child: const Text(
                       "Share, Reuse, Sustain:",
-                      style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  Text(
+                  const Text(
                     "Your Community Reuse Platform",
-                    style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    "Reuse Hub connects donors and seekers to exchange reusable goods for free, promoting sustainability and reducing waste in your community.",
+                    "Reuse Hub connects donors and seekers to exchange reusable goods for free, "
+                        "promoting sustainability and reducing waste in your community.",
                     style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                     textAlign: TextAlign.center,
                   ),
@@ -194,15 +198,17 @@ class _SplashScreenState extends State<SplashScreen>
                     children: [
                       ElevatedButton(
                         onPressed: _navigateBasedOnAuth,
-                        style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                        ),
                         child: const Text("Get Started"),
                       ),
                       const SizedBox(width: 10),
                       OutlinedButton(
                         onPressed: () => _scrollToSection(_categoriesKey),
                         style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.green)),
+                          side: const BorderSide(color: Colors.green),
+                        ),
                         child: const Text(
                           "Browse Categories",
                           style: TextStyle(color: Colors.green),
@@ -212,14 +218,17 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 40),
 
+                  // Categories
                   Container(
                     key: _categoriesKey,
                     child: Column(
                       children: [
-                        Text(
+                        const Text(
                           "What Items Can You Reuse?",
-                          style: const TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 5),
@@ -259,14 +268,17 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 40),
 
+                  // How it works
                   Container(
                     key: _howItWorksKey,
                     child: Column(
                       children: [
-                        Text(
+                        const Text(
                           "How Reuse Hub Works",
-                          style: const TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 5),
@@ -289,6 +301,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 50),
 
+                  // About/footer
                   Container(
                     key: _aboutKey,
                     width: double.infinity,
@@ -311,7 +324,9 @@ class _SplashScreenState extends State<SplashScreen>
                               child: const Text(
                                 "Reuse Hub\nPromoting sustainable living by connecting communities for item reuse and reducing waste.",
                                 style: TextStyle(
-                                    fontSize: 14, color: Colors.white70),
+                                  fontSize: 14,
+                                  color: Colors.white70,
+                                ),
                               ),
                             ),
                             SizedBox(
@@ -321,9 +336,10 @@ class _SplashScreenState extends State<SplashScreen>
                                 children: [
                                   Text("Quick Links",
                                       style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.white)),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      )),
                                   SizedBox(height: 10),
                                   Text("Home",
                                       style: TextStyle(color: Colors.white70)),
@@ -341,16 +357,19 @@ class _SplashScreenState extends State<SplashScreen>
                                 children: [
                                   Text("Contact Information",
                                       style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.white)),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      )),
                                   SizedBox(height: 10),
                                   Text("support@reusehub.com",
                                       style: TextStyle(color: Colors.white70)),
                                   SizedBox(height: 20),
                                   Text("© 2025 Reuse Hub. All rights reserved.",
                                       style: TextStyle(
-                                          color: Colors.white54, fontSize: 12)),
+                                        color: Colors.white54,
+                                        fontSize: 12,
+                                      )),
                                 ],
                               ),
                             ),
@@ -380,9 +399,11 @@ class _SplashScreenState extends State<SplashScreen>
             const SizedBox(height: 10),
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
-            Text(subtitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[700], fontSize: 12),
+            ),
           ],
         ),
       ),
@@ -390,7 +411,10 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Widget _buildHowItWorksStep(
-      IconData icon, String title, String description) {
+      IconData icon,
+      String title,
+      String description,
+      ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(

@@ -139,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   OutlinedButton.icon(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/home');
+                      Navigator.pushNamedAndRemoveUntil(context, '/splash', (route) => false);
                     },
                     icon: const Icon(Icons.home),
                     label: const Text('Home'),

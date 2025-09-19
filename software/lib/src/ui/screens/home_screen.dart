@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 // ✅ use the service for requests (and later you can reuse for item ops)
 import '../../services/item_service.dart';
+import '../widgets/app_bottom_nav.dart';
 
 /// Home shows a feed of items.
 /// - Donor: can post (FAB) but cannot request items.
@@ -263,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
       // Donor-only FAB to post items
       floatingActionButton: _canPost
           ? FloatingActionButton.extended(
