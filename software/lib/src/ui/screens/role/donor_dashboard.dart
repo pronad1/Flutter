@@ -104,104 +104,161 @@ class _DonorDashboardState extends State<DonorDashboard> {
                     child: Text('You have not posted any items yet.'),
                   );
                 }
+                // Preload owner names for all visible docs (faster than per-item fetch)
+                final ownerIds = docs.map((e) => (e.data()['ownerId'] ?? '').toString()).where((s) => s.isNotEmpty).toSet().toList();
 
-                return Column(
-                  children: docs.map((d) {
-                    final m = d.data();
-                    final id = d.id;
-                    final title = _s(m['title']);
-                    final desc = _s(m['description']);
-                    final img = _s(m['imageUrl']);
-                    final available = (m['available'] as bool?) ?? true;
+                return FutureBuilder<Map<String, String>>(
+                  future: _itemService.getUserNames(ownerIds),
+                  builder: (ctx, namesSnap) {
+                    final names = namesSnap.data ?? {};
+                    return Column(
+                      children: docs.map((d) {
+                        final m = d.data();
+                        final id = d.id;
+                        final title = _s(m['title']);
+                        final desc = _s(m['description']);
+                        final img = _s(m['imageUrl']);
+                        final available = (m['available'] as bool?) ?? true;
+                        final oid = (m['ownerId'] ?? '').toString();
+                        final ownerName = (m['ownerName'] ?? '').toString();
+                        final displayName = ownerName.trim().isNotEmpty && ownerName.trim() != '(No name)'
+                            ? ownerName
+                            : (names[oid] ?? '(No name)');
 
-                    return Card(
-                      elevation: 0,
-                      margin: const EdgeInsets.only(bottom: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: img.isNotEmpty
-                                  ? Image.network(
-                                img,
-                                width: 72,
-                                height: 72,
-                                fit: BoxFit.cover,
-                              )
-                                  : Container(
-                                width: 72,
-                                height: 72,
-                                color: Colors.black12,
-                                child: const Icon(Icons.image),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    title.isEmpty ? '(Untitled)' : title,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                        return Card(
+                          elevation: 0,
+                          margin: const EdgeInsets.only(bottom: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: img.isNotEmpty
+                                      ? Image.network(
+                                    img,
+                                    width: 72,
+                                    height: 72,
+                                    fit: BoxFit.cover,
+                                  )
+                                      : Container(
+                                    width: 72,
+                                    height: 72,
+                                    color: Colors.black12,
+                                    child: const Icon(Icons.image),
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    desc.isEmpty
-                                        ? 'No description.'
-                                        : desc,
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                     children: [
-                                      FutureBuilder<bool>(
-                                        future: _itemService.hasApprovedRequestsForItem(id),
-                                        builder: (ctx, snap) {
-                                          final hasApproved = snap.data == true;
-                                          final isAvail = !hasApproved && available;
-                                          return Chip(
-                                            label: Text(isAvail ? 'Available' : 'Unavailable'),
-                                            avatar: Icon(
-                                              isAvail ? Icons.check_circle : Icons.block,
-                                              size: 18,
-                                              color: isAvail ? Colors.green : Colors.redAccent,
-                                            ),
+                                      Text(
+                                        title.isEmpty ? '(Untitled)' : title,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        desc.isEmpty
+                                            ? 'No description.'
+                                            : desc,
+                                        maxLines: 3,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+
+                                      // If displayName is placeholder, try client-side read
+                                      if (displayName.trim() == '(No name)' || displayName.startsWith('ID:'))
+                                        FutureBuilder<String>(
+                                          future: _itemService.getUserName(oid),
+                                          builder: (ctx2, fb2) {
+                                            final n = (fb2.hasData && fb2.data!.trim().isNotEmpty && fb2.data! != '(No name)') ? fb2.data! : displayName;
+                                            return Text('Donor: $n · Posted: ${_itemService.formatTimestamp(m['createdAt'])}', style: TextStyle(color: Colors.grey[700], fontSize: 12));
+                                          },
+                                        )
+                                      else
+                                        Text(
+                                          'Donor: $displayName · Posted: ${_itemService.formatTimestamp(m['createdAt'])}',
+                                          style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                                        ),
+                                      // Show seeker name if item has been received
+                                      FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                                        future: FirebaseFirestore.instance
+                                            .collection('requests')
+                                            .where('itemId', isEqualTo: id)
+                                            .where('status', isEqualTo: 'approved')
+                                            .limit(1)
+                                            .get(),
+                                        builder: (ctx3, reqSnap) {
+                                          if (reqSnap.connectionState != ConnectionState.done || !reqSnap.hasData || reqSnap.data!.docs.isEmpty) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          final req = reqSnap.data!.docs.first.data();
+                                          final seekerId = (req['seekerId'] ?? '').toString();
+                                          if (seekerId.isEmpty) return const SizedBox.shrink();
+                                          return FutureBuilder<String>(
+                                            future: _itemService.getUserName(seekerId),
+                                            builder: (ctx4, seekerSnap) {
+                                              final seekerName = (seekerSnap.hasData && seekerSnap.data!.trim().isNotEmpty && seekerSnap.data! != '(No name)')
+                                                  ? seekerSnap.data!
+                                                  : 'ID:${seekerId.substring(0, seekerId.length > 8 ? 8 : seekerId.length)}';
+                                              return Padding(
+                                                padding: const EdgeInsets.only(top: 4),
+                                                child: Text('Received by: $seekerName', style: TextStyle(color: Colors.blueGrey[700], fontSize: 12, fontStyle: FontStyle.italic)),
+                                              );
+                                            },
                                           );
                                         },
                                       ),
-                                      const Spacer(),
-                                      IconButton(
-                                        tooltip: 'Edit item',
-                                        onPressed: () {
-                                          Navigator.pushNamed(
-                                            context,
-                                            '/edit-item',
-                                            arguments: id,
-                                          );
-                                        },
-                                        icon: const Icon(Icons.edit),
-                                      )
+                                      Row(
+                                        children: [
+                                          FutureBuilder<bool>(
+                                            future: _itemService.hasApprovedRequestsForItem(id),
+                                            builder: (ctx, snap) {
+                                              final hasApproved = snap.data == true;
+                                              final isAvail = !hasApproved && available;
+                                              return Chip(
+                                                label: Text(isAvail ? 'Available' : 'Unavailable'),
+                                                avatar: Icon(
+                                                  isAvail ? Icons.check_circle : Icons.block,
+                                                  size: 18,
+                                                  color: isAvail ? Colors.green : Colors.redAccent,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          const Spacer(),
+                                          IconButton(
+                                            tooltip: 'Edit item',
+                                            onPressed: () {
+                                              Navigator.pushNamed(
+                                                context,
+                                                '/edit-item',
+                                                arguments: id,
+                                              );
+                                            },
+                                            icon: const Icon(Icons.edit),
+                                          )
+                                        ],
+                                      ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
+                  },
                 );
               },
             ),

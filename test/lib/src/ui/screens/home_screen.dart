@@ -1,16 +1,12 @@
 // lib/src/ui/screens/home_screen.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math';
 import 'package:flutter/material.dart';
 
-// ✅ use the service for requests (and later you can reuse for item ops)
-import '../../services/item_service.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../../services/item_service.dart';
 
-/// Home shows a feed of items.
-/// - Donor: can post (FAB) but cannot request items.
-/// - Seeker: cannot post; can request items.
-/// - Admin: can view everything; no post button by default.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -23,100 +19,33 @@ class _HomeScreenState extends State<HomeScreen> {
   final _db = FirebaseFirestore.instance;
   final _itemService = ItemService();
 
-  String _role = ''; // 'donor' | 'seeker' | 'admin' | ''
-  bool _loadingRole = true;
+  bool get _canPost => (_auth.currentUser != null);
+  bool get _canRequest => (_auth.currentUser != null);
 
-  @override
-  void initState() {
-    super.initState();
-    _loadRole();
-  }
-
-  Future<void> _loadRole() async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacementNamed(context, '/login');
-      });
-      return;
-    }
-
-    try {
-      final snap = await _db.collection('users').doc(user.uid).get();
-      final data = snap.data() ?? {};
-      final role = (data['role'] ?? '').toString().toLowerCase();
-      if (!mounted) return;
-      setState(() {
-        _role = role;
-        _loadingRole = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loadingRole = false);
-    }
-  }
-
-  /// Stream of items ordered by createdAt desc
   Stream<QuerySnapshot<Map<String, dynamic>>> _itemsStream() {
-    return _db
-        .collection('items')
-        .orderBy('createdAt', descending: true)
-        .snapshots();
+    return _db.collection('items').orderBy('createdAt', descending: true).snapshots();
   }
-
-  bool get _canPost => _role == 'donor';   // donor only
-  bool get _canRequest => _role == 'seeker'; // seeker only
 
   String _prettyStatus(String s) {
-    if (s.isEmpty) return s;
-    return s[0].toUpperCase() + s.substring(1);
+    if (s == 'pending') return 'Requested';
+    if (s == 'approved') return 'Accepted';
+    return s.isEmpty ? '' : s[0].toUpperCase() + s.substring(1);
   }
 
-  Future<void> _requestItem({
-    required String itemId,
-    required String ownerId,
-    required String title,
-  }) async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please login first.')),
-      );
-      return;
-    }
-
-    // Confirm
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Request this item?'),
-        content: Text('You are requesting: "$title"'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Request')),
-        ],
-      ),
-    );
-    if (ok != true) return;
-
+  Future<void> _requestItem({required String itemId, required String ownerId, required String title}) async {
     try {
       await _itemService.createRequest(itemId: itemId, ownerId: ownerId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request sent to donor.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request sent')));
     } catch (e) {
       if (!mounted) return;
-      // Show error as a dialog so seeker sees it clearly
       await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Request failed'),
+          title: const Text('Failed to request'),
           content: Text(e.toString()),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK')),
           ],
         ),
       );
@@ -125,13 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loadingRole) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Home')),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(title: const Text('Home')),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -154,207 +76,216 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: Text('No items yet. Be the first to post!'));
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
-            itemCount: docs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, i) {
-              final d = docs[i].data();
-              final id = docs[i].id;
-              final ownerId = (d['ownerId'] ?? '').toString();
-              final title = (d['title'] ?? '').toString();
-              final desc = (d['description'] ?? '').toString();
-              final imageUrl = (d['imageUrl'] ?? '').toString();
-                final rawAvailable = (d['available'] as bool?) ?? true;
-                // If there is an approved request for this item, consider it unavailable
-                final available = rawAvailable; // we'll refine per-user below using service
+          final ownerIds = docs.map((e) => (e.data()['ownerId'] ?? '').toString()).where((s) => s.isNotEmpty).toSet().toList();
 
-              return Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () {
-                    // Optional: item detail route if you wire it
-                    // Navigator.pushNamed(context, '/item-detail', arguments: id);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Image
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: imageUrl.isNotEmpty
-                              ? Image.network(
-                            imageUrl,
-                            width: 88,
-                            height: 88,
-                            fit: BoxFit.cover,
-                          )
-                              : Container(
-                            width: 88,
-                            height: 88,
-                            color: Colors.black12,
-                            child: const Icon(Icons.image_not_supported_outlined),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
+          return FutureBuilder<Map<String, String>>(
+            future: _itemService.getUserNames(ownerIds),
+            builder: (ctx, namesSnap) {
+              final names = namesSnap.data ?? {};
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
+                itemCount: docs.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, i) {
+                  final doc = docs[i];
+                  final d = doc.data();
+                  final id = doc.id;
+                  final ownerId = (d['ownerId'] ?? '').toString();
+                  final title = (d['title'] ?? '').toString();
+                  final desc = (d['description'] ?? '').toString();
+                  final imageUrl = (d['imageUrl'] ?? '').toString();
+                  final rawAvailable = (d['available'] as bool?) ?? true;
+                  final available = rawAvailable;
+          final ownerNameDoc = (d['ownerName'] ?? '').toString();
+          var resolvedName = (ownerNameDoc.trim().isNotEmpty && ownerNameDoc.trim() != '(No name)')
+            ? ownerNameDoc
+            : (names[ownerId] ?? '(No name)');
+          final displayName = (resolvedName.trim() == '(No name)')
+            ? (ownerId.isNotEmpty ? 'ID:${ownerId.substring(0, min(8, ownerId.length))}' : '(No name)')
+            : resolvedName;
 
-                        // Texts + actions
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Title
-                              Text(
-                                title.isEmpty ? '(Untitled)' : title,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-
-                              // Description
-                              Text(
-                                desc.isEmpty ? 'No description.' : desc,
-                                style: const TextStyle(color: Colors.black87),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              Row(
+                  return Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {},
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: imageUrl.isNotEmpty
+                                  ? Image.network(
+                                      imageUrl,
+                                      width: 88,
+                                      height: 88,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      width: 88,
+                                      height: 88,
+                                      color: Colors.black12,
+                                      child: const Icon(Icons.image_not_supported_outlined),
+                                    ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Combined future: fetch whether any pending request exists for this item
-                                  // and the current user's request status for it. This lets us show:
-                                  // - For the requester: 'Requested' (pending) or 'Accepted' (approved)
-                                  // - For other seekers: 'Booked' (if any pending request) and disable Request
-                                  // - If approved => item.available will be false and UI will show 'Unavailable' + 'Accepted'
-                                  if (_canRequest)
-                                    FutureBuilder<List<Object?>>(
-                                      future: Future.wait([
-                                        _itemService.hasPendingRequestsForItem(id),
-                                        _itemService.hasApprovedRequestsForItem(id),
-                                        _itemService.getUserRequestStatusForItem(id),
-                                      ]),
-                                      builder: (ctx, snap2) {
-                                        if (snap2.connectionState == ConnectionState.waiting) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        final hasPending = (snap2.data != null && snap2.data!.isNotEmpty && snap2.data![0] == true);
-                                        final hasApproved = (snap2.data != null && snap2.data!.length > 1 && snap2.data![1] == true);
-                                        final status = (snap2.data != null && snap2.data!.length > 2) ? (snap2.data![2] as String?) : null;
-
-                                        // If already approved by donor, treat as unavailable for new requests
-                                        if (hasApproved && (status == null || status.isEmpty)) {
-                                          return TextButton.icon(
-                                            onPressed: null,
-                                            icon: const Icon(Icons.block),
-                                            label: const Text('Unavailable'),
-                                          );
-                                        }
-
-                                        // Booked state (somebody else has a pending request)
-                                        if (hasPending && (status == null || status.isEmpty)) {
-                                          // show booked (disabled) for non-requesters
-                                          return TextButton.icon(
-                                            onPressed: null,
-                                            icon: const Icon(Icons.hourglass_top),
-                                            label: const Text('Booked'),
-                                          );
-                                        }
-
-                                        // If current seeker already requested show their status
-                                        if (status != null && status.isNotEmpty) {
-                                          final label = status == 'pending'
-                                              ? 'Requested'
-                                              : (status == 'approved' ? 'Accepted' : _prettyStatus(status));
-                                          return TextButton.icon(
-                                            onPressed: null,
-                                            icon: const Icon(Icons.hourglass_top),
-                                            label: Text(label),
-                                          );
-                                        }
-
-                                        // No pending and not requested yet → allow Request if available
-                                        if (available) {
-                                          return TextButton.icon(
-                                            onPressed: () => _requestItem(
-                                              itemId: id,
-                                              ownerId: ownerId,
-                                              title: title,
-                                            ),
-                                            icon: const Icon(Icons.handshake_outlined),
-                                            label: const Text('Request'),
-                                          );
-                                        }
-
-                                        return const SizedBox.shrink();
-                                      },
+                                  Text(
+                                    title.isEmpty ? '(Untitled)' : title,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
                                     ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    desc.isEmpty ? 'No description.' : desc,
+                                    style: const TextStyle(color: Colors.black87),
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 8),
+                                      // If displayName is just an ID or placeholder, try a client-side read to get the real name
+                                      if (displayName.startsWith('ID:') || displayName == '(No name)')
+                                        FutureBuilder<String>(
+                                          future: _itemService.getUserName(ownerId),
+                                          builder: (ctx, fb) {
+                                            final name = (fb.hasData && fb.data!.trim().isNotEmpty && fb.data! != '(No name)') ? fb.data! : displayName;
+                                            return Text(
+                                              'Donor: $name · Posted: ${_itemService.formatTimestamp(d['createdAt'])}',
+                                              style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                                            );
+                                          },
+                                        )
+                                      else
+                                        Text(
+                                          'Donor: $displayName · Posted: ${_itemService.formatTimestamp(d['createdAt'])}',
+                                          style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                                        ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      if (_canRequest)
+                                        FutureBuilder<List<Object?>>(
+                                          future: Future.wait([
+                                            _itemService.hasPendingRequestsForItem(id),
+                                            _itemService.hasApprovedRequestsForItem(id),
+                                            _itemService.getUserRequestStatusForItem(id),
+                                          ]),
+                                          builder: (ctx, snap2) {
+                                            if (snap2.connectionState == ConnectionState.waiting) {
+                                              return const SizedBox.shrink();
+                                            }
+                                            final hasPending = (snap2.data != null && snap2.data!.isNotEmpty && snap2.data![0] == true);
+                                            final hasApproved = (snap2.data != null && snap2.data!.length > 1 && snap2.data![1] == true);
+                                            final status = (snap2.data != null && snap2.data!.length > 2) ? (snap2.data![2] as String?) : null;
 
-                                  // If the user cannot request (not seeker) we still show availability/booked chip
-                                  if (!_canRequest)
-                                    FutureBuilder<bool>(
-                                      future: _itemService.hasPendingRequestsForItem(id),
-                                      builder: (ctx, pendingSnap) {
-                                        final hasPending = pendingSnap.data == true;
-                                        if (hasPending) {
-                                          return Chip(
-                                            label: const Text('Booked'),
-                                            avatar: const Icon(Icons.hourglass_top, size: 18, color: Colors.orange),
-                                          );
-                                        }
-                                        return Chip(
-                                          label: Text(available ? 'Available' : 'Unavailable'),
-                                          avatar: Icon(
-                                            available ? Icons.check_circle : Icons.block,
-                                            size: 18,
-                                            color: available ? Colors.green : Colors.redAccent,
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                            if (hasApproved && (status == null || status.isEmpty)) {
+                                              return TextButton.icon(
+                                                onPressed: null,
+                                                icon: const Icon(Icons.block),
+                                                label: const Text('Unavailable'),
+                                              );
+                                            }
 
-                                  // Donor action (edit own item)
-                                  if (_canPost && _auth.currentUser?.uid == ownerId)
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/edit-item',
-                                          arguments: id,
-                                        );
-                                      },
-                                      icon: const Icon(Icons.edit),
-                                      label: const Text('Edit'),
-                                    ),
+                                            if (hasPending && (status == null || status.isEmpty)) {
+                                              return TextButton.icon(
+                                                onPressed: null,
+                                                icon: const Icon(Icons.hourglass_top),
+                                                label: const Text('Booked'),
+                                              );
+                                            }
+
+                                            if (status != null && status.isNotEmpty) {
+                                              final label = status == 'pending'
+                                                  ? 'Requested'
+                                                  : (status == 'approved' ? 'Accepted' : _prettyStatus(status));
+                                              return TextButton.icon(
+                                                onPressed: null,
+                                                icon: const Icon(Icons.hourglass_top),
+                                                label: Text(label),
+                                              );
+                                            }
+
+                                            if (available) {
+                                              return TextButton.icon(
+                                                onPressed: () => _requestItem(
+                                                  itemId: id,
+                                                  ownerId: ownerId,
+                                                  title: title,
+                                                ),
+                                                icon: const Icon(Icons.handshake_outlined),
+                                                label: const Text('Request'),
+                                              );
+                                            }
+
+                                            return const SizedBox.shrink();
+                                          },
+                                        ),
+
+                                      if (!_canRequest)
+                                        FutureBuilder<bool>(
+                                          future: _itemService.hasPendingRequestsForItem(id),
+                                          builder: (ctx, pendingSnap) {
+                                            final hasPending = pendingSnap.data == true;
+                                            if (hasPending) {
+                                              return Chip(
+                                                label: const Text('Booked'),
+                                                avatar: const Icon(Icons.hourglass_top, size: 18, color: Colors.orange),
+                                              );
+                                            }
+                                            return Chip(
+                                              label: Text(available ? 'Available' : 'Unavailable'),
+                                              avatar: Icon(
+                                                available ? Icons.check_circle : Icons.block,
+                                                size: 18,
+                                                color: available ? Colors.green : Colors.redAccent,
+                                              ),
+                                            );
+                                          },
+                                        ),
+
+                                      if (_canPost && _auth.currentUser?.uid == ownerId)
+                                        TextButton.icon(
+                                          onPressed: () {
+                                            Navigator.pushNamed(
+                                              context,
+                                              '/edit-item',
+                                              arguments: id,
+                                            );
+                                          },
+                                          icon: const Icon(Icons.edit),
+                                          label: const Text('Edit'),
+                                        ),
+                                    ],
+                                  ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           );
         },
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 0),
-      // Donor-only FAB to post items
       floatingActionButton: _canPost
           ? FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/create-item'),
-        icon: const Icon(Icons.add),
-        label: const Text('Post Item'),
-      )
+              onPressed: () => Navigator.pushNamed(context, '/create-item'),
+              icon: const Icon(Icons.add),
+              label: const Text('Post Item'),
+            )
           : null,
     );
   }

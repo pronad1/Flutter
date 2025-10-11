@@ -55,6 +55,18 @@ class ItemService {
 
     // ➕ ensure fields needed by search/sorting exist even if Item model doesn't have them
     item['titleLower'] = title.trim().toLowerCase();
+    // Denormalize owner name for easy reads in non-admin contexts
+    String ownerName = user.displayName ?? '';
+    try {
+      if (ownerName.isEmpty) {
+        final u = await _db.collection('users').doc(user.uid).get();
+        final ud = u.data();
+        if (ud != null) ownerName = (ud['name'] ?? ud['displayName'] ?? '').toString();
+      }
+    } catch (_) {
+      // ignore
+    }
+    item['ownerName'] = ownerName.trim();
     item['createdAt'] = FieldValue.serverTimestamp();
 
     await ref.set(item);
@@ -302,5 +314,142 @@ class ItemService {
         .limit(1)
         .get();
     return q.docs.isNotEmpty;
+  }
+
+  // ----- User helpers -----
+  final Map<String, String> _userNameCache = {};
+
+  /// Get a user's display name (cached). Falls back to 'No name' when missing.
+  Future<String> getUserName(String uid) async {
+    if (uid.isEmpty) return '(No name)';
+    if (_userNameCache.containsKey(uid)) return _userNameCache[uid]!;
+    try {
+      final snap = await _db.collection('users').doc(uid).get();
+      final d = snap.data();
+      String name = '';
+      if (d != null) {
+        name = (d['name'] ?? d['displayName'] ?? '').toString();
+      }
+      if (name.isEmpty) name = '(No name)';
+      _userNameCache[uid] = name;
+      return name;
+    } catch (_) {
+      return '(No name)';
+    }
+  }
+
+  /// Batch fetch user display names for multiple uids.
+  /// Returns a map uid -> displayName. Uses cache and queries missing uids in chunks.
+  Future<Map<String, String>> getUserNames(List<String> uids) async {
+    final out = <String, String>{};
+    final toFetch = <String>[];
+
+    for (final u in uids) {
+      if (u.isEmpty) continue;
+      if (_userNameCache.containsKey(u)) {
+        out[u] = _userNameCache[u]!;
+      } else {
+        toFetch.add(u);
+      }
+    }
+
+    const chunk = 10;
+    try {
+      for (var i = 0; i < toFetch.length; i += chunk) {
+        final part = toFetch.sublist(i, (i + chunk).clamp(0, toFetch.length));
+        final q = await _db.collection('users').where(FieldPath.documentId, whereIn: part).get();
+        for (final d in q.docs) {
+          final uid = d.id;
+          final data = d.data();
+          String name = (data['name'] ?? data['displayName'] ?? '').toString();
+          if (name.isEmpty) name = '(No name)';
+          _userNameCache[uid] = name;
+          out[uid] = name;
+        }
+        // For any uids not returned (missing users), mark as '(No name)'
+        for (final uid in part) {
+          if (!out.containsKey(uid)) {
+            out[uid] = '(No name)';
+            _userNameCache[uid] = '(No name)';
+          }
+        }
+      }
+    } catch (_) {
+      // On failure, ensure all requested uids have at least a placeholder
+      for (final uid in toFetch) {
+        out[uid] = '(No name)';
+      }
+    }
+
+    return out;
+  }
+
+  /// Format a Firestore Timestamp or DateTime into a simple YYYY-MM-DD string.
+  String formatTimestamp(dynamic t) {
+    DateTime dt;
+    if (t is Timestamp) dt = t.toDate();
+    else if (t is DateTime) dt = t;
+    else dt = DateTime.fromMillisecondsSinceEpoch(0);
+    final d = dt.toLocal();
+    return '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  }
+
+  /// Backfill `ownerName` on existing items.
+  /// Returns the number of documents updated.
+  /// onProgress, if provided, will be called with human readable status updates.
+  Future<int> backfillOwnerNames({int pageSize = 200, void Function(String)? onProgress}) async {
+    int updated = 0;
+    try {
+      Query<Map<String, dynamic>> q = _db.collection('items').orderBy('createdAt').limit(pageSize);
+      DocumentSnapshot? last;
+
+      while (true) {
+        Query<Map<String, dynamic>> pageQ = q;
+        if (last != null) pageQ = pageQ.startAfterDocument(last);
+        final snap = await pageQ.get();
+        if (snap.docs.isEmpty) break;
+        last = snap.docs.last;
+
+        final batch = _db.batch();
+        for (final d in snap.docs) {
+          final data = d.data();
+          final ownerId = (data['ownerId'] ?? '').toString();
+          final ownerName = (data['ownerName'] ?? '').toString();
+          if (ownerId.isEmpty) continue;
+          if (ownerName.isNotEmpty) continue; // already populated
+
+          String name = '(No name)';
+          try {
+            final u = await _db.collection('users').doc(ownerId).get();
+            final ud = u.data();
+            if (ud != null) {
+              name = (ud['name'] ?? ud['displayName'] ?? '').toString();
+            }
+            if (name.isEmpty) name = '(No name)';
+          } catch (e) {
+            // best-effort: if we can't read the user, leave placeholder
+            name = '(No name)';
+          }
+
+          batch.update(d.reference, {'ownerName': name, 'updatedAt': FieldValue.serverTimestamp()});
+          updated++;
+          if (onProgress != null) onProgress('Prepared update for item ${d.id} -> $name');
+        }
+
+        // commit batch if there are writes queued
+        try {
+          await batch.commit();
+          if (onProgress != null) onProgress('Committed ${snap.docs.length} items (processed so far: $updated)');
+        } catch (e) {
+          if (onProgress != null) onProgress('Failed to commit batch: $e');
+        }
+
+        if (snap.docs.length < pageSize) break;
+      }
+    } catch (e) {
+      // propagate or return what we have
+      rethrow;
+    }
+    return updated;
   }
 }

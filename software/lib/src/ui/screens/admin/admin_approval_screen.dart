@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../services/item_service.dart';
 import '../../widgets/app_bottom_nav.dart';
 
 class AdminApprovalScreen extends StatefulWidget {
@@ -11,6 +12,9 @@ class AdminApprovalScreen extends StatefulWidget {
 
 class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   bool _showPendingOnly = true;
+  bool _isBackfilling = false;
+  String _backfillLog = '';
+  final _itemService = ItemService();
 
   /// Stream for the list (pending/all)
   Stream<QuerySnapshot<Map<String, dynamic>>> _listStream() {
@@ -64,6 +68,62 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
 
       body: Column(
         children: [
+          // ---- BACKFILL ACTION ----
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.backup),
+                  label: Text(_isBackfilling ? 'Backfilling…' : 'Backfill owner names'),
+                  onPressed: _isBackfilling
+                      ? null
+                      : () async {
+                    setState(() {
+                      _isBackfilling = true;
+                      _backfillLog = 'Starting backfill...';
+                    });
+                    try {
+                      final count = await _itemService.backfillOwnerNames(
+                        onProgress: (s) {
+                          setState(() {
+                            _backfillLog = '${DateTime.now().toIso8601String()}: $s\n' + _backfillLog;
+                          });
+                        },
+                      );
+                      if (!mounted) return;
+                      setState(() {
+                        _backfillLog = 'Backfill complete — updated $count items.\n' + _backfillLog;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backfill updated $count items')));
+                    } catch (e) {
+                      if (!mounted) return;
+                      setState(() {
+                        _backfillLog = 'Backfill failed: $e\n' + _backfillLog;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backfill failed: $e')));
+                    } finally {
+                      if (!mounted) return;
+                      setState(() {
+                        _isBackfilling = false;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                if (_backfillLog.isNotEmpty)
+                  SizedBox(
+                    height: 120,
+                    child: SingleChildScrollView(
+                      reverse: true,
+                      child: Text(_backfillLog, style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
           // ---- COUNTS HEADER ----
           StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: usersCol.snapshots(),

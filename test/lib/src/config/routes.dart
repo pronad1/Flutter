@@ -59,10 +59,10 @@ class Routes {
 
     // ✅ use aliased imports to avoid class name clashes
       case donor:
-        return MaterialPageRoute(builder: (_) => const donor_screen.DonorDashboard());
+        return MaterialPageRoute(builder: (_) => donor_screen.DonorDashboard());
 
       case seeker:
-        return MaterialPageRoute(builder: (_) => const seeker_screen.SeekerDashboard());
+        return MaterialPageRoute(builder: (_) => seeker_screen.SeekerDashboard());
 
       case search:
         return MaterialPageRoute(builder: (_) => const SearchScreen());

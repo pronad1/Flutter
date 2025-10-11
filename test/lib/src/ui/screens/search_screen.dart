@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/app_bottom_nav.dart';
+import '../../services/item_service.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -19,6 +20,7 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _busy = false;
   String _query = '';
   List<Map<String, dynamic>> _results = [];
+  final _itemService = ItemService();
 
   @override
   void initState() {
@@ -73,6 +75,9 @@ class _SearchScreenState extends State<SearchScreen> {
           _results = rows;
           _busy = false;
         });
+        // Pre-fetch owner names for this page of results
+        final ownerIds = rows.map((r) => (r['ownerId'] ?? '').toString()).where((s) => s.isNotEmpty).toSet().toList();
+        unawaited(_itemService.getUserNames(ownerIds));
       }
     } catch (e) {
       if (!mounted) return;
@@ -182,22 +187,41 @@ class _SearchScreenState extends State<SearchScreen> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 8),
-                                        Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: available ? Colors.purple.shade50 : Colors.grey.shade200,
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                              available ? 'Available' : 'Unavailable',
-                                              style: TextStyle(
-                                                color: available ? Colors.purple : Colors.grey.shade700,
-                                                fontWeight: FontWeight.w600,
+
+                                        // Donor name + posted date
+                                        FutureBuilder<String>(
+                                          future: () async {
+                                            final ownerId = (m['ownerId'] ?? '').toString();
+                                            final ownerName = (m['ownerName'] ?? '').toString();
+                                            if (ownerName.trim().isNotEmpty && ownerName.trim() != '(No name)') return ownerName;
+                                            return await _itemService.getUserName(ownerId);
+                                          }(),
+                                          builder: (ctx, fbName) {
+                                            final name = (fbName.hasData ? fbName.data! : '(No name)');
+                                            final posted = _itemService.formatTimestamp(m['createdAt']);
+                                            final display = (name.trim() == '(No name)' || name.startsWith('ID:'))
+                                                ? null
+                                                : name;
+                                            if (display == null) {
+                                              return Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: FutureBuilder<String>(
+                                                  future: _itemService.getUserName((m['ownerId'] ?? '').toString()),
+                                                  builder: (ctx2, fb2) {
+                                                    final n = (fb2.hasData && fb2.data!.trim().isNotEmpty && fb2.data! != '(No name)') ? fb2.data! : name;
+                                                    return Text('Donor: $n · Posted: $posted', style: TextStyle(color: Colors.grey[700], fontSize: 12));
+                                                  },
+                                                ),
+                                              );
+                                            }
+                                            return Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: Text(
+                                                'Donor: $display · Posted: $posted',
+                                                style: TextStyle(color: Colors.grey[700], fontSize: 12),
                                               ),
-                                            ),
-                                          ),
+                                            );
+                                          },
                                         ),
                                       ],
                                     ),
