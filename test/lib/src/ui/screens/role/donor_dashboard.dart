@@ -165,19 +165,20 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      Chip(
-                                        label: Text(available
-                                            ? 'Available'
-                                            : 'Unavailable'),
-                                        avatar: Icon(
-                                          available
-                                              ? Icons.check_circle
-                                              : Icons.block,
-                                          size: 18,
-                                          color: available
-                                              ? Colors.green
-                                              : Colors.redAccent,
-                                        ),
+                                      FutureBuilder<bool>(
+                                        future: _itemService.hasApprovedRequestsForItem(id),
+                                        builder: (ctx, snap) {
+                                          final hasApproved = snap.data == true;
+                                          final isAvail = !hasApproved && available;
+                                          return Chip(
+                                            label: Text(isAvail ? 'Available' : 'Unavailable'),
+                                            avatar: Icon(
+                                              isAvail ? Icons.check_circle : Icons.block,
+                                              size: 18,
+                                              color: isAvail ? Colors.green : Colors.redAccent,
+                                            ),
+                                          );
+                                        },
                                       ),
                                       const Spacer(),
                                       IconButton(

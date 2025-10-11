@@ -109,8 +109,16 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to request: $e')),
+      // Show error as a dialog so seeker sees it clearly
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Request failed'),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+          ],
+        ),
       );
     }
   }
@@ -157,7 +165,9 @@ class _HomeScreenState extends State<HomeScreen> {
               final title = (d['title'] ?? '').toString();
               final desc = (d['description'] ?? '').toString();
               final imageUrl = (d['imageUrl'] ?? '').toString();
-              final available = (d['available'] as bool?) ?? true;
+                final rawAvailable = (d['available'] as bool?) ?? true;
+                // If there is an approved request for this item, consider it unavailable
+                final available = rawAvailable; // we'll refine per-user below using service
 
               return Card(
                 elevation: 0,
@@ -228,6 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     FutureBuilder<List<Object?>>(
                                       future: Future.wait([
                                         _itemService.hasPendingRequestsForItem(id),
+                                        _itemService.hasApprovedRequestsForItem(id),
                                         _itemService.getUserRequestStatusForItem(id),
                                       ]),
                                       builder: (ctx, snap2) {
@@ -235,7 +246,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                           return const SizedBox.shrink();
                                         }
                                         final hasPending = (snap2.data != null && snap2.data!.isNotEmpty && snap2.data![0] == true);
-                                        final status = (snap2.data != null && snap2.data!.length > 1) ? (snap2.data![1] as String?) : null;
+                                        final hasApproved = (snap2.data != null && snap2.data!.length > 1 && snap2.data![1] == true);
+                                        final status = (snap2.data != null && snap2.data!.length > 2) ? (snap2.data![2] as String?) : null;
+
+                                        // If already approved by donor, treat as unavailable for new requests
+                                        if (hasApproved && (status == null || status.isEmpty)) {
+                                          return TextButton.icon(
+                                            onPressed: null,
+                                            icon: const Icon(Icons.block),
+                                            label: const Text('Unavailable'),
+                                          );
+                                        }
 
                                         // Booked state (somebody else has a pending request)
                                         if (hasPending && (status == null || status.isEmpty)) {

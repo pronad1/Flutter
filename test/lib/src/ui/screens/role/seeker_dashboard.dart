@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../widgets/app_bottom_nav.dart';
+import '../../../services/item_service.dart';
 
 class SeekerDashboard extends StatefulWidget {
   const SeekerDashboard({super.key});
@@ -130,8 +131,13 @@ class _SeekerDashboardState extends State<SeekerDashboard> {
                                   const EdgeInsets.symmetric(horizontal: 6),
                                 ),
                                 const SizedBox(width: 8),
-                                Chip(
-                                  label: Text(available ? 'Available' : 'Unavailable'),
+                                FutureBuilder<bool>(
+                                  future: ItemService().hasApprovedRequestsForItem(itemId),
+                                  builder: (ctx, aprovSnap) {
+                                    final hasApproved = aprovSnap.data == true;
+                                    final isAvail = !hasApproved && available;
+                                    return Chip(label: Text(isAvail ? 'Available' : 'Unavailable'));
+                                  },
                                 ),
                               ],
                             ),

@@ -50,63 +50,36 @@ class _SearchScreenState extends State<SearchScreen> {
     final qLower = q.toLowerCase();
 
     try {
-      // ---- FAST PATH (prefix on titleLower) ----
-      // Requires items documents to have a `titleLower` field with the title in lowercase,
-      // and an index on orderBy(titleLower).
+      // Simple client-side search: load recent items and filter locally by title/description.
+      // This guarantees both available and unavailable items are considered.
       final snap = await _db
           .collection('items')
-          .where('available', isEqualTo: true)
-          .orderBy('titleLower')
-          .startAt([qLower])
-          .endAt(['$qLower\uf8ff'])
-          .limit(50)
+          .orderBy('createdAt', descending: true)
+          .limit(500)
           .get();
 
       final rows = snap.docs.map((d) {
-        final data = d.data();
+        final data = Map<String, dynamic>.from(d.data());
         data['__id'] = d.id;
         return data;
+      }).where((m) {
+        final title = (m['title'] ?? '').toString().toLowerCase();
+        final desc = (m['description'] ?? '').toString().toLowerCase();
+        return title.contains(qLower) || desc.contains(qLower);
       }).toList();
 
-      setState(() {
-        _results = rows;
-        _busy = false;
-      });
-    } catch (e) {
-      // ---- FALLBACK (client-side filter) ----
-      // Works even if titleLower/index doesn’t exist yet.
-      try {
-        final snap = await _db
-            .collection('items')
-            .orderBy('createdAt', descending: true)
-            .limit(100)
-            .get();
-
-        final rows = snap.docs.map((d) {
-          final data = d.data();
-          data['__id'] = d.id;
-          return data;
-        }).where((m) {
-          final title = (m['title'] ?? '').toString().toLowerCase();
-          final desc = (m['description'] ?? '').toString().toLowerCase();
-          final available = (m['available'] as bool?) ?? true;
-          if (!available) return false;
-          return title.contains(qLower) || desc.contains(qLower);
-        }).toList();
-
-        if (mounted) {
-          setState(() {
-            _results = rows;
-            _busy = false;
-          });
-        }
-      } catch (e2) {
-        if (!mounted) return;
-        setState(() => _busy = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Search failed: $e2')),
-        );
+      if (mounted) {
+        setState(() {
+          _results = rows;
+          _busy = false;
+        });
       }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Search failed: $e')),
+      );
     }
   }
 
@@ -153,69 +126,88 @@ class _SearchScreenState extends State<SearchScreen> {
             child: _busy
                 ? const Center(child: CircularProgressIndicator())
                 : _results.isEmpty
-                ? const Center(child: Text('No matches found.'))
-                : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-              itemCount: _results.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, i) {
-                final m = _results[i];
-                final id = (m['__id'] ?? '').toString();
-                final title = (m['title'] ?? '').toString();
-                final desc = (m['description'] ?? '').toString();
-                final imageUrl = (m['imageUrl'] ?? '').toString();
+                    ? const Center(child: Text('No matches found.'))
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+                        itemCount: _results.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, i) {
+                          final m = _results[i];
+                          final id = (m['__id'] ?? '').toString();
+                          final title = (m['title'] ?? '').toString();
+                          final desc = (m['description'] ?? '').toString();
+                          final imageUrl = (m['imageUrl'] ?? '').toString();
+                          final available = (m['available'] as bool?) ?? true;
 
-                return Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: imageUrl.isNotEmpty
-                              ? Image.network(
-                            imageUrl,
-                            width: 72,
-                            height: 72,
-                            fit: BoxFit.cover,
-                          )
-                              : Container(
-                            width: 72,
-                            height: 72,
-                            color: Colors.black12,
-                            child: const Icon(Icons.image_not_supported_outlined),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title.isEmpty ? '(Untitled)' : title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
-                                ),
+                          return Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: imageUrl.isNotEmpty
+                                        ? Image.network(
+                                            imageUrl,
+                                            width: 72,
+                                            height: 72,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Container(
+                                            width: 72,
+                                            height: 72,
+                                            color: Colors.black12,
+                                            child: const Icon(Icons.image_not_supported_outlined),
+                                          ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          title.isEmpty ? '(Untitled)' : title,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          desc.isEmpty ? 'No description.' : desc,
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: available ? Colors.purple.shade50 : Colors.grey.shade200,
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              available ? 'Available' : 'Unavailable',
+                                              style: TextStyle(
+                                                color: available ? Colors.purple : Colors.grey.shade700,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                desc.isEmpty ? 'No description.' : desc,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
