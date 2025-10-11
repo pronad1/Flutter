@@ -145,6 +145,17 @@ class ItemService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not logged in');
 
+    // Prevent duplicate requests from the same seeker for same item
+    final existing = await _db
+        .collection('requests')
+        .where('itemId', isEqualTo: itemId)
+        .where('seekerId', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+    if (existing.docs.isNotEmpty) {
+      throw Exception('You have already requested this item');
+    }
+
     await _db.collection('requests').add({
       'itemId': itemId,
       'ownerId': ownerId,
@@ -200,5 +211,40 @@ class ItemService {
       'status': status,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    // If donor approves a request, mark the item as unavailable.
+    if (status == 'approved') {
+      final reqSnap = await ref.get();
+      final reqData = reqSnap.data();
+      final itemId = reqData?['itemId'] as String?;
+      if (itemId != null && itemId.isNotEmpty) {
+        await _db.collection('items').doc(itemId).update({'available': false, 'updatedAt': FieldValue.serverTimestamp()});
+      }
+    }
+  }
+
+  /// Return the request status for the current user on the given item (or null)
+  Future<String?> getUserRequestStatusForItem(String itemId) async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    final q = await _db
+        .collection('requests')
+        .where('itemId', isEqualTo: itemId)
+        .where('seekerId', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+    if (q.docs.isEmpty) return null;
+    return (q.docs.first.data()['status'] ?? '').toString();
+  }
+
+  /// Return true if there is any pending request for this item
+  Future<bool> hasPendingRequestsForItem(String itemId) async {
+    final q = await _db
+        .collection('requests')
+        .where('itemId', isEqualTo: itemId)
+        .where('status', isEqualTo: 'pending')
+        .limit(1)
+        .get();
+    return q.docs.isNotEmpty;
   }
 }
