@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../widgets/app_bottom_nav.dart';
+import '../../../services/item_service.dart';
+import '../../../models/item.dart';
 
 class DonorDashboard extends StatefulWidget {
   const DonorDashboard({super.key});
@@ -15,6 +17,7 @@ class DonorDashboard extends StatefulWidget {
 class _DonorDashboardState extends State<DonorDashboard> {
   final _auth = FirebaseAuth.instance;
   final _db = FirebaseFirestore.instance;
+  final _itemService = ItemService();
 
   String? get _uid => _auth.currentUser?.uid;
 
@@ -41,10 +44,8 @@ class _DonorDashboardState extends State<DonorDashboard> {
     required String status, // 'approved' | 'rejected' | 'completed'
   }) async {
     try {
-      await _db.collection('requests').doc(requestId).update({
-        'status': status,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      // Use ItemService which will also update the item availability when approved
+      await _itemService.setRequestStatus(requestId: requestId, status: status);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Request $status')),
@@ -245,32 +246,57 @@ class _DonorDashboardState extends State<DonorDashboard> {
                     final itemId = _s(m['itemId']);
                     final status = _s(m['status']); // pending/approved/...
 
-                    return Card(
-                      elevation: 0,
-                      margin: const EdgeInsets.only(bottom: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        leading: const Icon(Icons.inbox_outlined),
-                        title: Text('Item: $itemId'),
-                        subtitle: Text('Status: $status'),
-                        trailing: _RequestActions(
-                          status: status,
-                          onApprove: () => _setRequestStatus(
-                            requestId: requestId,
-                            status: 'approved',
+                    // Load the item so we can show image + title
+                    return FutureBuilder<Item>(
+                      future: _itemService.getItemById(itemId),
+                      builder: (ctx, itemSnap) {
+                        Widget leading;
+                        String titleText = 'Item: $itemId';
+
+                        if (itemSnap.connectionState == ConnectionState.waiting) {
+                          leading = const SizedBox(width: 56, height: 56, child: Center(child: CircularProgressIndicator(strokeWidth: 2)));
+                        } else if (itemSnap.hasError || itemSnap.data == null) {
+                          leading = const Icon(Icons.inbox_outlined);
+                        } else {
+                          final item = itemSnap.data!;
+                          titleText = item.title.isEmpty ? '(Untitled)' : item.title;
+                          final img = item.imageUrl ?? '';
+                          leading = ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: img.isNotEmpty
+                                ? Image.network(img, width: 56, height: 56, fit: BoxFit.cover)
+                                : const Icon(Icons.image_not_supported_outlined, size: 36),
+                          );
+                        }
+
+                        return Card(
+                          elevation: 0,
+                          margin: const EdgeInsets.only(bottom: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          onReject: () => _setRequestStatus(
-                            requestId: requestId,
-                            status: 'rejected',
+                          child: ListTile(
+                            leading: leading,
+                            title: Text(titleText),
+                            subtitle: Text('Status: $status'),
+                            trailing: _RequestActions(
+                              status: status,
+                              onApprove: () => _setRequestStatus(
+                                requestId: requestId,
+                                status: 'approved',
+                              ),
+                              onReject: () => _setRequestStatus(
+                                requestId: requestId,
+                                status: 'rejected',
+                              ),
+                              onComplete: () => _setRequestStatus(
+                                requestId: requestId,
+                                status: 'completed',
+                              ),
+                            ),
                           ),
-                          onComplete: () => _setRequestStatus(
-                            requestId: requestId,
-                            status: 'completed',
-                          ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   }).toList(),
                 );
@@ -280,11 +306,11 @@ class _DonorDashboardState extends State<DonorDashboard> {
         ),
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
-        floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.pushNamed(context, '/create-item'),
         icon: const Icon(Icons.add),
         label: const Text('Post Item'),
-        ),
+      ),
     );
   }
 }
