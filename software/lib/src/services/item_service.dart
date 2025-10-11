@@ -145,6 +145,29 @@ class ItemService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not logged in');
 
+    // Prevent duplicate requests from the same seeker for same item
+    final existing = await _db
+        .collection('requests')
+        .where('itemId', isEqualTo: itemId)
+        .where('seekerId', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+    if (existing.docs.isNotEmpty) {
+      throw Exception('You have already requested this item');
+    }
+
+    // Check item availability and whether an approved request already exists
+    final itemRef = _db.collection('items').doc(itemId);
+    final itemSnap = await itemRef.get();
+    if (!itemSnap.exists) throw Exception('Item not found');
+    final itemData = itemSnap.data() as Map<String, dynamic>;
+    final isAvailable = (itemData['available'] as bool?) ?? true;
+    if (!isAvailable) throw Exception('Item is not available');
+
+    // Note: don't query other users' requests here — security rules may forbid
+    // reading requests that don't belong to the current user. Rely on the
+    // item's `available` field to determine if requests are allowed.
+
     await _db.collection('requests').add({
       'itemId': itemId,
       'ownerId': ownerId,
@@ -196,9 +219,88 @@ class ItemService {
       throw Exception('Not allowed');
     }
 
-    await ref.update({
-      'status': status,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    // If approving, do transactionally: update this request to approved and set item.available = false.
+    if (status == 'approved') {
+      final itemId = (data['itemId'] ?? '').toString();
+      if (itemId.isEmpty) throw Exception('Invalid request: missing itemId');
+
+      final itemRef = _db.collection('items').doc(itemId);
+
+      await _db.runTransaction((tx) async {
+        final reqSnap = await tx.get(ref);
+        final reqData = reqSnap.data();
+        if (reqData == null) throw Exception('Request not found');
+        if (reqData['ownerId'] != user.uid) throw Exception('Not allowed');
+
+        // Ensure item still exists and is available
+        final itemSnap = await tx.get(itemRef);
+        if (!itemSnap.exists) throw Exception('Item not found');
+        final itemData = itemSnap.data() as Map<String, dynamic>;
+        final isAvailable = (itemData['available'] as bool?) ?? true;
+        if (!isAvailable) throw Exception('Item is already unavailable');
+
+        tx.update(ref, {'status': status, 'updatedAt': FieldValue.serverTimestamp()});
+        tx.update(itemRef, {'available': false, 'updatedAt': FieldValue.serverTimestamp()});
+      });
+
+      // After transaction, best-effort reject other pending requests for this item
+      try {
+        final pendingQ = await _db
+            .collection('requests')
+            .where('itemId', isEqualTo: itemId)
+            .where('status', isEqualTo: 'pending')
+            .get();
+
+        final batch = _db.batch();
+        for (final d in pendingQ.docs) {
+          if (d.id == requestId) continue;
+          batch.update(d.reference, {'status': 'rejected', 'updatedAt': FieldValue.serverTimestamp()});
+        }
+        if (pendingQ.docs.isNotEmpty) await batch.commit();
+      } catch (_) {
+        // ignore
+      }
+    } else {
+      await ref.update({
+        'status': status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  /// Return the request status for the current user on the given item (or null)
+  Future<String?> getUserRequestStatusForItem(String itemId) async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    final q = await _db
+        .collection('requests')
+        .where('itemId', isEqualTo: itemId)
+        .where('seekerId', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+    if (q.docs.isEmpty) return null;
+    return (q.docs.first.data()['status'] ?? '').toString();
+  }
+
+  /// Return true if there is any pending request for this item
+  Future<bool> hasPendingRequestsForItem(String itemId) async {
+    final q = await _db
+        .collection('requests')
+        .where('itemId', isEqualTo: itemId)
+        .where('status', isEqualTo: 'pending')
+        .limit(1)
+        .get();
+    return q.docs.isNotEmpty;
+  }
+
+  /// Return true if there is any approved request for this item
+  Future<bool> hasApprovedRequestsForItem(String itemId) async {
+    final q = await _db
+        .collection('requests')
+        .where('itemId', isEqualTo: itemId)
+        .where('status', isEqualTo: 'approved')
+        .limit(1)
+        .get();
+    return q.docs.isNotEmpty;
   }
 }

@@ -50,63 +50,36 @@ class _SearchScreenState extends State<SearchScreen> {
     final qLower = q.toLowerCase();
 
     try {
-      // ---- FAST PATH (prefix on titleLower) ----
-      // Requires items documents to have a `titleLower` field with the title in lowercase,
-      // and an index on orderBy(titleLower).
+      // Simple client-side search: load recent items and filter locally by title/description.
+      // This guarantees both available and unavailable items are considered.
       final snap = await _db
           .collection('items')
-          .where('available', isEqualTo: true)
-          .orderBy('titleLower')
-          .startAt([qLower])
-          .endAt(['$qLower\uf8ff'])
-          .limit(50)
+          .orderBy('createdAt', descending: true)
+          .limit(500)
           .get();
 
       final rows = snap.docs.map((d) {
-        final data = d.data();
+        final data = Map<String, dynamic>.from(d.data());
         data['__id'] = d.id;
         return data;
+      }).where((m) {
+        final title = (m['title'] ?? '').toString().toLowerCase();
+        final desc = (m['description'] ?? '').toString().toLowerCase();
+        return title.contains(qLower) || desc.contains(qLower);
       }).toList();
 
-      setState(() {
-        _results = rows;
-        _busy = false;
-      });
-    } catch (e) {
-      // ---- FALLBACK (client-side filter) ----
-      // Works even if titleLower/index doesn’t exist yet.
-      try {
-        final snap = await _db
-            .collection('items')
-            .orderBy('createdAt', descending: true)
-            .limit(100)
-            .get();
-
-        final rows = snap.docs.map((d) {
-          final data = d.data();
-          data['__id'] = d.id;
-          return data;
-        }).where((m) {
-          final title = (m['title'] ?? '').toString().toLowerCase();
-          final desc = (m['description'] ?? '').toString().toLowerCase();
-          final available = (m['available'] as bool?) ?? true;
-          if (!available) return false;
-          return title.contains(qLower) || desc.contains(qLower);
-        }).toList();
-
-        if (mounted) {
-          setState(() {
-            _results = rows;
-            _busy = false;
-          });
-        }
-      } catch (e2) {
-        if (!mounted) return;
-        setState(() => _busy = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Search failed: $e2')),
-        );
+      if (mounted) {
+        setState(() {
+          _results = rows;
+          _busy = false;
+        });
       }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Search failed: $e')),
+      );
     }
   }
 
@@ -164,6 +137,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 final title = (m['title'] ?? '').toString();
                 final desc = (m['description'] ?? '').toString();
                 final imageUrl = (m['imageUrl'] ?? '').toString();
+                final available = (m['available'] as bool?) ?? true;
 
                 return Card(
                   elevation: 0,
@@ -206,6 +180,24 @@ class _SearchScreenState extends State<SearchScreen> {
                                 desc.isEmpty ? 'No description.' : desc,
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: available ? Colors.purple.shade50 : Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    available ? 'Available' : 'Unavailable',
+                                    style: TextStyle(
+                                      color: available ? Colors.purple : Colors.grey.shade700,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ],
                           ),

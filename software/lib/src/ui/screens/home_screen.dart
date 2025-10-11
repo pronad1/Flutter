@@ -68,6 +68,11 @@ class _HomeScreenState extends State<HomeScreen> {
   bool get _canPost => _role == 'donor';   // donor only
   bool get _canRequest => _role == 'seeker'; // seeker only
 
+  String _prettyStatus(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
+  }
+
   Future<void> _requestItem({
     required String itemId,
     required String ownerId,
@@ -104,8 +109,16 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to request: $e')),
+      // Show error as a dialog so seeker sees it clearly
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Request failed'),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+          ],
+        ),
       );
     }
   }
@@ -152,7 +165,9 @@ class _HomeScreenState extends State<HomeScreen> {
               final title = (d['title'] ?? '').toString();
               final desc = (d['description'] ?? '').toString();
               final imageUrl = (d['imageUrl'] ?? '').toString();
-              final available = (d['available'] as bool?) ?? true;
+              final rawAvailable = (d['available'] as bool?) ?? true;
+              // If there is an approved request for this item, consider it unavailable
+              final available = rawAvailable; // we'll refine per-user below using service
 
               return Card(
                 elevation: 0,
@@ -214,27 +229,95 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               Row(
                                 children: [
-                                  // Availability chip
-                                  Chip(
-                                    label: Text(available ? 'Available' : 'Unavailable'),
-                                    avatar: Icon(
-                                      available ? Icons.check_circle : Icons.block,
-                                      size: 18,
-                                      color: available ? Colors.green : Colors.redAccent,
-                                    ),
-                                  ),
-                                  const Spacer(),
+                                  // Combined future: fetch whether any pending request exists for this item
+                                  // and the current user's request status for it. This lets us show:
+                                  // - For the requester: 'Requested' (pending) or 'Accepted' (approved)
+                                  // - For other seekers: 'Booked' (if any pending request) and disable Request
+                                  // - If approved => item.available will be false and UI will show 'Unavailable' + 'Accepted'
+                                  if (_canRequest)
+                                    FutureBuilder<List<Object?>>(
+                                      future: Future.wait([
+                                        _itemService.hasPendingRequestsForItem(id),
+                                        _itemService.hasApprovedRequestsForItem(id),
+                                        _itemService.getUserRequestStatusForItem(id),
+                                      ]),
+                                      builder: (ctx, snap2) {
+                                        if (snap2.connectionState == ConnectionState.waiting) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        final hasPending = (snap2.data != null && snap2.data!.isNotEmpty && snap2.data![0] == true);
+                                        final hasApproved = (snap2.data != null && snap2.data!.length > 1 && snap2.data![1] == true);
+                                        final status = (snap2.data != null && snap2.data!.length > 2) ? (snap2.data![2] as String?) : null;
 
-                                  // Seeker action
-                                  if (_canRequest && available)
-                                    TextButton.icon(
-                                      onPressed: () => _requestItem(
-                                        itemId: id,
-                                        ownerId: ownerId,
-                                        title: title,
-                                      ),
-                                      icon: const Icon(Icons.handshake_outlined),
-                                      label: const Text('Request'),
+                                        // If already approved by donor, treat as unavailable for new requests
+                                        if (hasApproved && (status == null || status.isEmpty)) {
+                                          return TextButton.icon(
+                                            onPressed: null,
+                                            icon: const Icon(Icons.block),
+                                            label: const Text('Unavailable'),
+                                          );
+                                        }
+
+                                        // Booked state (somebody else has a pending request)
+                                        if (hasPending && (status == null || status.isEmpty)) {
+                                          // show booked (disabled) for non-requesters
+                                          return TextButton.icon(
+                                            onPressed: null,
+                                            icon: const Icon(Icons.hourglass_top),
+                                            label: const Text('Booked'),
+                                          );
+                                        }
+
+                                        // If current seeker already requested show their status
+                                        if (status != null && status.isNotEmpty) {
+                                          final label = status == 'pending'
+                                              ? 'Requested'
+                                              : (status == 'approved' ? 'Accepted' : _prettyStatus(status));
+                                          return TextButton.icon(
+                                            onPressed: null,
+                                            icon: const Icon(Icons.hourglass_top),
+                                            label: Text(label),
+                                          );
+                                        }
+
+                                        // No pending and not requested yet → allow Request if available
+                                        if (available) {
+                                          return TextButton.icon(
+                                            onPressed: () => _requestItem(
+                                              itemId: id,
+                                              ownerId: ownerId,
+                                              title: title,
+                                            ),
+                                            icon: const Icon(Icons.handshake_outlined),
+                                            label: const Text('Request'),
+                                          );
+                                        }
+
+                                        return const SizedBox.shrink();
+                                      },
+                                    ),
+
+                                  // If the user cannot request (not seeker) we still show availability/booked chip
+                                  if (!_canRequest)
+                                    FutureBuilder<bool>(
+                                      future: _itemService.hasPendingRequestsForItem(id),
+                                      builder: (ctx, pendingSnap) {
+                                        final hasPending = pendingSnap.data == true;
+                                        if (hasPending) {
+                                          return Chip(
+                                            label: const Text('Booked'),
+                                            avatar: const Icon(Icons.hourglass_top, size: 18, color: Colors.orange),
+                                          );
+                                        }
+                                        return Chip(
+                                          label: Text(available ? 'Available' : 'Unavailable'),
+                                          avatar: Icon(
+                                            available ? Icons.check_circle : Icons.block,
+                                            size: 18,
+                                            color: available ? Colors.green : Colors.redAccent,
+                                          ),
+                                        );
+                                      },
                                     ),
 
                                   // Donor action (edit own item)
