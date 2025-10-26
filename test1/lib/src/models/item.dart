@@ -9,6 +9,7 @@ class Item {
   final String? imagePath;  // Supabase storage path (for delete/replace)
   final String? category;
   final String? condition;  // New/Good/Used/etc
+  final String? pickupAddress;  // Pickup location address
   final bool available;
   final Timestamp createdAt;
 
@@ -21,6 +22,7 @@ class Item {
     this.imagePath,
     this.category,
     this.condition,
+    this.pickupAddress,
     required this.available,
     required this.createdAt,
   });
@@ -34,6 +36,7 @@ class Item {
       'imagePath': imagePath,
       'category': category,
       'condition': condition,
+      'pickupAddress': pickupAddress,
       'available': available,
       'createdAt': createdAt,
     };
@@ -50,6 +53,7 @@ class Item {
       imagePath: d['imagePath'],
       category: d['category'],
       condition: d['condition'],
+      pickupAddress: d['pickupAddress'],
       available: (d['available'] as bool?) ?? true,
       createdAt: (d['createdAt'] as Timestamp?) ?? Timestamp.now(),
     );

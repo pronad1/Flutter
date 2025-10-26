@@ -18,6 +18,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _desc = TextEditingController();
+  final _address = TextEditingController();
   String? _category;
   String? _condition;
 
@@ -66,6 +67,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
         imageFile: _picked, // optional
         category: _category,
         condition: _condition,
+        pickupAddress: _address.text.trim().isNotEmpty ? _address.text.trim() : null,
       );
 
       if (!mounted) return;
@@ -87,6 +89,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
   void dispose() {
     _title.dispose();
     _desc.dispose();
+    _address.dispose();
     super.dispose();
   }
 
@@ -138,6 +141,18 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
                 validator: (v) => v == null || v.trim().isEmpty
                     ? 'Enter a brief description'
                     : null,
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: _address,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Pickup Address (Optional)',
+                  hintText: 'Where can seekers pick up this item?',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
               ),
               const SizedBox(height: 12),
 

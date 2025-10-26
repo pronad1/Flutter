@@ -20,6 +20,7 @@ class ItemService {
     XFile? imageFile,
     String? category,
     String? condition,
+    String? pickupAddress,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not logged in');
@@ -47,6 +48,7 @@ class ItemService {
       imagePath: imagePath,
       category: category,
       condition: condition,
+      pickupAddress: pickupAddress,
       available: true,
       createdAt: Timestamp.now(), // kept for your model; we'll also write serverTimestamp below
     ).toMap()
@@ -80,6 +82,7 @@ class ItemService {
     String? description,
     String? category,
     String? condition,
+    String? pickupAddress,
     bool? available,
     XFile? newImageFile,
   }) async {
@@ -121,6 +124,7 @@ class ItemService {
       if (description != null) 'description': description.trim(),
       if (category != null) 'category': category,
       if (condition != null) 'condition': condition,
+      if (pickupAddress != null) 'pickupAddress': pickupAddress.trim(),
       if (available != null) 'available': available,
       if (newImageFile != null) 'imageUrl': imageUrl,
       if (newImageFile != null) 'imagePath': imagePath,
@@ -324,6 +328,20 @@ class ItemService {
     if (uid.isEmpty) return '(No name)';
     if (_userNameCache.containsKey(uid)) return _userNameCache[uid]!;
     try {
+      // First try publicProfiles (publicly readable)
+      final publicSnap = await _db.collection('publicProfiles').doc(uid).get();
+      if (publicSnap.exists) {
+        final publicData = publicSnap.data();
+        if (publicData != null && publicData['name'] != null) {
+          final name = publicData['name'].toString().trim();
+          if (name.isNotEmpty) {
+            _userNameCache[uid] = name;
+            return name;
+          }
+        }
+      }
+      
+      // Fallback to users collection (may fail due to permissions)
       final snap = await _db.collection('users').doc(uid).get();
       final d = snap.data();
       String name = '';

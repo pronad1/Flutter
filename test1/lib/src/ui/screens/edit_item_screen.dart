@@ -20,6 +20,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
 
   final _title = TextEditingController();
   final _desc = TextEditingController();
+  final _address = TextEditingController();
   String? _category;
   String? _condition;
   bool _available = true;
@@ -46,6 +47,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
       setState(() {
         _title.text = item.title;
         _desc.text = item.description;
+        _address.text = item.pickupAddress ?? '';
         _category = item.category;
         _condition = item.condition;
         _available = item.available;
@@ -102,6 +104,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
         description: _desc.text.trim(),
         category: _category,
         condition: _condition,
+        pickupAddress: _address.text.trim().isNotEmpty ? _address.text.trim() : null,
         available: _available,
         newImageFile: _picked, // only if user picked new image
       );
@@ -125,6 +128,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
   void dispose() {
     _title.dispose();
     _desc.dispose();
+    _address.dispose();
     super.dispose();
   }
 
@@ -179,6 +183,18 @@ class _EditItemScreenState extends State<EditItemScreen> {
                 ),
                 validator: (v) =>
                 v == null || v.trim().isEmpty ? 'Enter a description' : null,
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: _address,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Pickup Address (Optional)',
+                  hintText: 'Where can seekers pick up this item?',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
               ),
               const SizedBox(height: 12),
 

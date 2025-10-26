@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../widgets/app_bottom_nav.dart';
 import '../../../services/item_service.dart';
+import '../profile/public_profile_screen.dart';
 
 class SeekerDashboard extends StatefulWidget {
   const SeekerDashboard({super.key});
@@ -104,7 +105,32 @@ class _SeekerDashboardState extends State<SeekerDashboard> {
                                 const SizedBox(height: 2),
                                 Text(desc, maxLines: 2, overflow: TextOverflow.ellipsis),
                                 const SizedBox(height: 6),
-                                Text('Donor: $displayName · Posted: ${_itemService.formatTimestamp(item['createdAt'])}', style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                                Row(
+                                  children: [
+                                    Text('Donor: ', style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                                    InkWell(
+                                      onTap: ownerId.isNotEmpty
+                                          ? () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => PublicProfileScreen(userId: ownerId),
+                                                ),
+                                              )
+                                          : null,
+                                      child: Text(
+                                        displayName,
+                                        style: TextStyle(
+                                          color: Colors.blue[700],
+                                          fontSize: 12,
+                                          decoration: TextDecoration.underline,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(' · Posted: ${_itemService.formatTimestamp(item['createdAt'])}',
+                                        style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                                  ],
+                                ),
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [

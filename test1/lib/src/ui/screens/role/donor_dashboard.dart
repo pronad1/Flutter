@@ -1,4 +1,3 @@
-// lib/src/ui/screens/role/donor_dashboard.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../../services/item_service.dart';
 import '../../../models/item.dart';
+import '../profile/public_profile_screen.dart';
 
 class DonorDashboard extends StatefulWidget {
   const DonorDashboard({super.key});
@@ -212,7 +212,29 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                                   : 'ID:${seekerId.substring(0, seekerId.length > 8 ? 8 : seekerId.length)}';
                                               return Padding(
                                                 padding: const EdgeInsets.only(top: 4),
-                                                child: Text('Received by: $seekerName', style: TextStyle(color: Colors.blueGrey[700], fontSize: 12, fontStyle: FontStyle.italic)),
+                                                child: Row(
+                                                  children: [
+                                                    Text('Received by: ', style: TextStyle(color: Colors.blueGrey[700], fontSize: 12, fontStyle: FontStyle.italic)),
+                                                    InkWell(
+                                                      onTap: () => Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (_) => PublicProfileScreen(userId: seekerId),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        seekerName,
+                                                        style: TextStyle(
+                                                          color: Colors.blue[700],
+                                                          fontSize: 12,
+                                                          fontStyle: FontStyle.italic,
+                                                          decoration: TextDecoration.underline,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               );
                                             },
                                           );
@@ -327,6 +349,8 @@ class _DonorDashboardState extends State<DonorDashboard> {
                           );
                         }
 
+                        final seekerId = _s(m['seekerId']);
+
                         return Card(
                           elevation: 0,
                           margin: const EdgeInsets.only(bottom: 10),
@@ -336,7 +360,43 @@ class _DonorDashboardState extends State<DonorDashboard> {
                           child: ListTile(
                             leading: leading,
                             title: Text(titleText),
-                            subtitle: Text('Status: $status'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Status: $status'),
+                                if (seekerId.isNotEmpty)
+                                  FutureBuilder<String>(
+                                    future: _itemService.getUserName(seekerId),
+                                    builder: (ctx2, seekerSnap) {
+                                      final seekerName = (seekerSnap.hasData && seekerSnap.data!.trim().isNotEmpty && seekerSnap.data! != '(No name)')
+                                          ? seekerSnap.data!
+                                          : 'Unknown seeker';
+                                      return Row(
+                                        children: [
+                                          Text('From: ', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                          InkWell(
+                                            onTap: () => Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => PublicProfileScreen(userId: seekerId),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              seekerName,
+                                              style: TextStyle(
+                                                color: Colors.blue[700],
+                                                fontSize: 12,
+                                                decoration: TextDecoration.underline,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                              ],
+                            ),
                             trailing: _RequestActions(
                               status: status,
                               onApprove: () => _setRequestStatus(

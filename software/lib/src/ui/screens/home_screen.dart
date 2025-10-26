@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/app_bottom_nav.dart';
 import '../../services/item_service.dart';
+import 'profile/public_profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -93,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   final ownerId = (d['ownerId'] ?? '').toString();
                   final title = (d['title'] ?? '').toString();
                   final desc = (d['description'] ?? '').toString();
+                  final pickupAddress = (d['pickupAddress'] ?? '').toString();
                   final imageUrl = (d['imageUrl'] ?? '').toString();
                   final rawAvailable = (d['available'] as bool?) ?? true;
                   final available = rawAvailable;
@@ -109,7 +111,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
-                      onTap: () {},
+                      onTap: () {
+                        // Open the donor's public profile when tapping the item card
+                        if (ownerId.isNotEmpty) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: ownerId)),
+                          );
+                        }
+                      },
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Row(
@@ -150,6 +160,27 @@ class _HomeScreenState extends State<HomeScreen> {
                                     maxLines: 3,
                                     overflow: TextOverflow.ellipsis,
                                   ),
+                                  if (pickupAddress.isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.location_on, size: 14, color: Colors.red[600]),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            'Pickup: $pickupAddress',
+                                            style: TextStyle(
+                                              color: Colors.red[700],
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                   const SizedBox(height: 8),
                                   // If displayName is just an ID or placeholder, try a client-side read to get the real name
                                   if (displayName.startsWith('ID:') || displayName == '(No name)')

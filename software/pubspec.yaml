@@ -52,6 +52,7 @@ dependencies:
   image_picker: ^1.2.0
   path: ^1.9.0
   mime: ^2.0.0
+  url_launcher: ^6.1.7
 
 
 dev_dependencies:

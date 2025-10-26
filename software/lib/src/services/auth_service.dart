@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';  // For debugPrint
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -33,6 +34,22 @@ class AuthService {
         'approvedAt': null,
         'approvedBy': null,
       });
+
+      // Create public profile (minimal fields for public viewing)
+      try {
+        await _firestore.collection('publicProfiles').doc(user.uid).set({
+          'name': name ?? '',
+          'bio': '',
+          'photoUrl': '',
+          'profilePicUrl': '',  // Support both field names
+          'email': email, // Include email for contact button
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        debugPrint('✅ Created publicProfiles/${user.uid} during signup');
+      } catch (e) {
+        debugPrint('⚠️ Could not create publicProfiles/${user.uid}: $e');
+        // best-effort: don't block signup if publicProfiles write fails
+      }
 
       // Send verification email
       await user.sendEmailVerification();

@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -144,6 +144,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         if (newPath != null) 'profilePicPath': newPath,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      // 2b) Update publicProfiles (public-facing minimal profile) so public views work
+      try {
+        final publicRef = FirebaseFirestore.instance.collection('publicProfiles').doc(uid);
+        await publicRef.set({
+          'name': _nameController.text.trim(),
+          'bio': _bioController.text.trim(),
+          'email': u.email ?? '',  // Include email for contact button
+          if (newUrl != null) 'photoUrl': newUrl,
+          if (newUrl != null) 'profilePicUrl': newUrl,  // Support both field names
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        debugPrint('✅ Updated publicProfiles/${uid} with new profile data');
+      } catch (e) {
+        debugPrint('⚠️ Could not update publicProfiles/${uid}: $e');
+        // best-effort: do not block the user if public profile write fails
+      }
 
       // Reflect locally for UI
       if (newUrl != null) _currentPhotoUrl = newUrl;

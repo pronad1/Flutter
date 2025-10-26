@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../../services/review_service.dart';
 
 /// Hardcoded admin identity + hosted photo URL (as in your project)
 const String kAdminEmail = 'ug2102049@cse.pstu.ac.bd';
@@ -202,6 +203,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   email,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Rating display with stars
+                FutureBuilder<Map<String, dynamic>>(
+                  future: ReviewService().fetchRatingSummary(user.uid),
+                  builder: (ctx, ratSnap) {
+                    if (!ratSnap.hasData) {
+                      return const SizedBox.shrink();
+                    }
+                    final data = ratSnap.data!;
+                    final avgRating = (data['avg'] ?? 0.0) as double;
+                    final count = (data['count'] ?? 0) as int;
+                    
+                    if (count == 0) {
+                      return const Text(
+                        '☆☆☆☆☆ No ratings yet',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      );
+                    }
+                    
+                    // Generate star string
+                    String stars = '';
+                    for (int i = 1; i <= 5; i++) {
+                      if (i <= avgRating.floor()) {
+                        stars += '★';
+                      } else if (i == avgRating.ceil() && avgRating % 1 >= 0.5) {
+                        stars += '⯨'; // half star
+                      } else {
+                        stars += '☆';
+                      }
+                    }
+                    
+                    return Text(
+                      '$stars ${avgRating.toStringAsFixed(1)} ($count)',
+                      style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 8),
