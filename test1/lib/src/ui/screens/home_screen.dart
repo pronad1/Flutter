@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/chatbot/chatbot_wrapper.dart';
 import '../../services/item_service.dart';
 import 'profile/public_profile_screen.dart';
 
@@ -55,22 +56,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _itemsStream(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('Failed to load items: ${snapshot.error}'),
-              ),
-            );
-          }
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Home')),
+        body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: _itemsStream(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text('Failed to load items: ${snapshot.error}'),
+                ),
+              );
+            }
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
           final docs = snapshot.data!.docs;
           if (docs.isEmpty) {
@@ -318,6 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
         label: const Text('Post Item'),
       )
           : null,
+      ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/chatbot/chatbot_wrapper.dart';
 import '../../../services/review_service.dart';
 
 /// Hardcoded admin identity + hosted photo URL (as in your project)
@@ -119,9 +120,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final emailVerified = user.emailVerified;
     final isHardcodedAdmin = user.email?.toLowerCase() == kAdminEmail.toLowerCase();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('My Profile'),
         // Keep default leading so back appears when navigated from somewhere else
         actions: [
           IconButton(
@@ -320,6 +322,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       // ✅ Use the shared bottom navigation so it's consistent across all main pages
       bottomNavigationBar: const AppBottomNav(currentIndex: 4),
+      ),
     );
   }
 

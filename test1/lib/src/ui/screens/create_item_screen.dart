@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../widgets/chatbot/chatbot_wrapper.dart';
 import '../../services/item_service.dart';
 
 class CreateItemScreen extends StatefulWidget {
@@ -97,8 +98,9 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
   Widget build(BuildContext context) {
     final preview = _preview();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Post a New Item')),
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Post a New Item')),
       body: _busy
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -208,6 +210,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
