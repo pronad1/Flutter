@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/supabase_image_service.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/chatbot/chatbot_wrapper.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -252,8 +253,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final avatarImage = _avatarProvider();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile')),
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Edit Profile')),
 
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -326,6 +328,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 3),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../widgets/chatbot/chatbot_wrapper.dart';
 import '../../services/item_service.dart';
 
 class EditItemScreen extends StatefulWidget {
@@ -135,16 +136,19 @@ class _EditItemScreenState extends State<EditItemScreen> {
   @override
   Widget build(BuildContext context) {
     if (_busy) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Edit Item')),
-        body: const Center(child: CircularProgressIndicator()),
+      return ChatbotWrapper(
+        child: Scaffold(
+          appBar: AppBar(title: const Text('Edit Item')),
+          body: const Center(child: CircularProgressIndicator()),
+        ),
       );
     }
 
     final preview = _preview();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Edit Item')),
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Edit Item')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -262,6 +266,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

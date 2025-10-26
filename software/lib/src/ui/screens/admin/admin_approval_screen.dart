@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../services/item_service.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/chatbot/chatbot_wrapper.dart';
 
 class AdminApprovalScreen extends StatefulWidget {
   const AdminApprovalScreen({super.key});
@@ -52,8 +53,9 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
   Widget build(BuildContext context) {
     final usersCol = FirebaseFirestore.instance.collection('users');
 
-    return Scaffold(
-      appBar: AppBar(
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(
         title: const Text('Admin – Approvals'),
         actions: [
           TextButton(
@@ -259,6 +261,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> {
 
       // ✅ Show global bottom nav here as well
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
+      ),
     );
   }
 }

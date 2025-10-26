@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/chatbot/chatbot_wrapper.dart';
 import '../../services/item_service.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -97,8 +98,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Search Items')),
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Search Items')),
       body: Column(
         children: [
           const SizedBox(height: 8),
@@ -236,6 +238,7 @@ class _SearchScreenState extends State<SearchScreen> {
         ],
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 2),
+      ),
     );
   }
 }
