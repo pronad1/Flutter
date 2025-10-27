@@ -436,10 +436,4 @@ For questions or support:
 
 ---
 
-## 📸 Screenshots
-
-> **Note**: Add screenshots of your app here to showcase the UI
-
----
-
 **Built with ❤️ using Flutter**
