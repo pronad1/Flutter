@@ -117,29 +117,58 @@ lib/
 
 ### Key Dependencies
 ```yaml
-# Core Firebase
-firebase_core: ^4.0.0
-firebase_auth: ^6.0.0
-cloud_firestore: ^6.0.0
-firebase_storage: ^13.0.0
+name: software
+description: "A new Flutter project."
+version: 1.0.0+1
 
-# Supabase
-supabase_flutter: ^2.10.1
+environment:
+  sdk: ^3.8.1
 
-# State Management
-provider: ^6.1.2
+dependencies:
+  flutter:
+    sdk: flutter
 
-# UI/UX
-google_fonts: ^6.2.0
-cached_network_image: ^3.3.1
-flutter_svg: ^2.2.0
+  cupertino_icons: ^1.0.8
+  firebase_core: ^4.0.0        # Upgraded from 2.31.0
+  firebase_auth: ^6.0.0        # Upgraded from 4.17.6
+  cloud_firestore: ^6.0.0
+  firebase_storage: ^13.0.0
+  provider: ^6.1.2
+  uuid: ^4.3.3
+  cached_network_image: ^3.3.1
+  google_fonts: ^6.2.0
+  intl: ^0.20.2
+  flutter_svg: ^2.2.0
+  http: ^1.4.0
+  fluttertoast: ^8.2.12         # Keep latest
+  pin_code_fields: ^8.0.1
+  shared_preferences: ^2.5.3
+  supabase_flutter: ^2.10.1
+  image_picker: ^1.2.0
+  path: ^1.9.0
+  mime: ^2.0.0
+  url_launcher: ^6.1.7
 
-# Utilities
-uuid: ^4.3.3
-intl: ^0.20.2
-image_picker: ^1.2.0
-url_launcher: ^6.1.7
-shared_preferences: ^2.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/data/
+
+
+  fonts:
+    - family: poppins
+      fonts:
+        - asset: fonts/Poppins-Regular.ttf
+
 ```
 
 ---
