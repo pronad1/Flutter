@@ -153,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             MaterialPageRoute(
                               builder: (_) => PublicProfileScreen(
                                 userId: ownerId,
-                                itemId: itemId,
+                                itemId: id,
                               ),
                             ),
                           );

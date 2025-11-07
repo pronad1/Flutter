@@ -29,6 +29,7 @@ class AuthService {
         'role': role,
         'name': name ?? '',
         'mobile': mobile ?? '',
+        'phone': mobile ?? '',  // Store as phone too for consistency
         'approved': false,
         'createdAt': FieldValue.serverTimestamp(),
         'approvedAt': null,
@@ -43,6 +44,7 @@ class AuthService {
           'photoUrl': '',
           'profilePicUrl': '',  // Support both field names
           'email': email, // Include email for contact button
+          'phone': mobile ?? '',  // Include phone for contact button
           'createdAt': FieldValue.serverTimestamp(),
         });
         debugPrint('✅ Created publicProfiles/${user.uid} during signup');

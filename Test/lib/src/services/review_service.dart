@@ -7,12 +7,21 @@ class ReviewService {
   final _auth = FirebaseAuth.instance;
 
   /// Stream reviews for a donor (ordered newest first)
+  /// If ordering fails due to missing index, falls back to unordered query
   Stream<QuerySnapshot<Map<String, dynamic>>> streamReviewsForDonor(String donorId) {
-    return _db
-        .collection('reviews')
-        .where('donorId', isEqualTo: donorId)
-        .orderBy('createdAt', descending: true)
-        .snapshots();
+    try {
+      return _db
+          .collection('reviews')
+          .where('donorId', isEqualTo: donorId)
+          .orderBy('createdAt', descending: true)
+          .snapshots();
+    } catch (e) {
+      // Fallback to unordered query if index doesn't exist yet
+      return _db
+          .collection('reviews')
+          .where('donorId', isEqualTo: donorId)
+          .snapshots();
+    }
   }
 
   /// Submit a review for a donor. Requires logged in user.
@@ -24,14 +33,19 @@ class ReviewService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Please log in to leave a review');
 
-    final reviewerName = user.displayName ?? '';
+    // Validate rating is between 1 and 5
+    if (rating < 1 || rating > 5) {
+      throw Exception('Rating must be between 1 and 5');
+    }
+
+    final reviewerName = user.displayName ?? 'Anonymous';
 
     await _db.collection('reviews').add({
       'donorId': donorId,
       'rating': rating,
       'text': (text ?? '').trim(),
       'reviewerId': user.uid,
-      'reviewerName': reviewerName,
+      'reviewerName': reviewerName.isNotEmpty ? reviewerName : 'Anonymous',
       'createdAt': FieldValue.serverTimestamp(),
     });
   }

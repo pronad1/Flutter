@@ -22,6 +22,7 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _bioController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -60,6 +61,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!mounted) return;
       if (data != null) {
         _bioController.text = (data['bio'] ?? '') as String;
+        _phoneController.text = (data['phone'] ?? data['phoneNumber'] ?? '') as String;
         _currentPhotoUrl = (data['profilePicUrl'] ?? '') as String;
         _currentPhotoPath = (data['profilePicPath'] ?? '') as String?;
         setState(() {});
@@ -141,6 +143,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       await userRef.update({
         'name': _nameController.text.trim(),
         'bio': _bioController.text.trim(),
+        'phone': _phoneController.text.trim(),
         if (newUrl != null) 'profilePicUrl': newUrl,
         if (newPath != null) 'profilePicPath': newPath,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -153,6 +156,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           'name': _nameController.text.trim(),
           'bio': _bioController.text.trim(),
           'email': u.email ?? '',  // Include email for contact button
+          'phone': _phoneController.text.trim(),  // Include phone for contact button
           if (newUrl != null) 'photoUrl': newUrl,
           if (newUrl != null) 'profilePicUrl': newUrl,  // Support both field names
           'updatedAt': FieldValue.serverTimestamp(),
@@ -243,6 +247,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _bioController.dispose();
+    _phoneController.dispose();
     _oldPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
@@ -278,6 +283,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            const SizedBox(height: 8),
+
+            TextField(
+              controller: _phoneController,
+              decoration: const InputDecoration(
+                labelText: 'Phone Number *',
+                hintText: 'Enter your contact number',
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 8),
 

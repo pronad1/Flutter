@@ -217,11 +217,18 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
       return;
     }
 
+    // Validate rating
+    if (_selectedRating < 1 || _selectedRating > 5) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a rating (1-5 stars)')));
+      return;
+    }
+
     setState(() => _submitting = true);
     try {
       await _reviewService.submitReview(donorId: donorId, rating: _selectedRating, text: _textCtrl.text);
       _textCtrl.clear();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Review submitted')));
+      setState(() => _selectedRating = 0); // Reset rating
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Review submitted successfully!')));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit review: $e')));
     } finally {
@@ -594,6 +601,88 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
+                      
+                      // Display phone number
+                      if (phone.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.phone, color: Colors.green.shade700, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Phone Number',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    Text(
+                                      phone,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      
+                      // Display email
+                      if (email.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.email, color: Colors.blue.shade700, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Email Address',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    Text(
+                                      email,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      
                       Row(
                         children: [
                           // Phone Button
@@ -673,8 +762,91 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                 StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: _reviewService.streamReviewsForDonor(widget.userId),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
+                    }
+                    
+                    if (snapshot.hasError) {
+                      final errorMsg = snapshot.error.toString();
+                      final needsIndex = errorMsg.contains('index') || 
+                                        errorMsg.contains('Index') ||
+                                        errorMsg.contains('FAILED_PRECONDITION');
+                      
+                      return Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: needsIndex ? Colors.orange[50] : Colors.red[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: needsIndex ? Colors.orange.shade200 : Colors.red.shade200,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              needsIndex ? Icons.build_outlined : Icons.error_outline,
+                              size: 48,
+                              color: needsIndex ? Colors.orange : Colors.red,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              needsIndex 
+                                  ? 'Database Index Building...' 
+                                  : 'Error Loading Reviews',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: needsIndex ? Colors.orange[900] : Colors.red[900],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              needsIndex
+                                  ? 'The Firestore index is being created. This usually takes a few minutes. Please refresh the page in a moment.'
+                                  : 'Unable to load reviews at this time.',
+                              style: TextStyle(
+                                color: needsIndex ? Colors.orange[800] : Colors.red[800],
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (needsIndex) ...[
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  // Refresh by rebuilding the widget
+                                  if (mounted) setState(() {});
+                                },
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Refresh'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    }
+
+                    if (!snapshot.hasData || snapshot.data == null) {
+                      return Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: Column(
+                            children: [
+                              Icon(Icons.rate_review_outlined, size: 48, color: Colors.grey),
+                              SizedBox(height: 8),
+                              Text('No reviews yet', style: TextStyle(color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      );
                     }
 
                     final reviews = snapshot.data!.docs;
@@ -700,30 +872,38 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
 
                     return Column(
                       children: reviews.map((doc) {
-                        final data = doc.data();
-                        final reviewerName = data['reviewerName'] ?? 'Anonymous';
-                        final rating = data['rating'] ?? 0;
-                        final text = data['text'] ?? '';
-                        final createdAt = data['createdAt'] as Timestamp?;
-                        
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          elevation: 1,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 20,
+                        try {
+                          final data = doc.data();
+                          final reviewerName = data['reviewerName'] ?? 'Anonymous';
+                          final rating = (data['rating'] ?? 0) as int;
+                          // Ensure rating is between 0 and 5 to avoid index errors
+                          final safeRating = rating.clamp(0, 5);
+                          final text = data['text'] ?? '';
+                          final createdAt = data['createdAt'] as Timestamp?;
+                          
+                          // Safe way to get first character for avatar
+                          final avatarLetter = reviewerName.isNotEmpty 
+                              ? reviewerName[0].toUpperCase() 
+                              : 'A';
+                          
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 20,
                                       backgroundColor: Colors.blue.shade100,
                                       child: Text(
-                                        reviewerName[0].toUpperCase(),
+                                        avatarLetter,
                                         style: TextStyle(
                                           color: Colors.blue.shade700,
                                           fontWeight: FontWeight.bold,
@@ -745,7 +925,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                                           Row(
                                             children: List.generate(5, (i) {
                                               return Icon(
-                                                i < rating ? Icons.star : Icons.star_border,
+                                                i < safeRating ? Icons.star : Icons.star_border,
                                                 size: 16,
                                                 color: Colors.amber,
                                               );
@@ -778,6 +958,33 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                             ),
                           ),
                         );
+                        } catch (e) {
+                          // If there's an error rendering a single review, show error card
+                          debugPrint('Error rendering review: $e');
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            elevation: 1,
+                            color: Colors.red[50],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.error_outline, color: Colors.red[700]),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Error displaying review',
+                                      style: TextStyle(color: Colors.red[700]),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
                       }).toList(),
                     );
                   },
