@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/chatbot/chatbot_wrapper.dart';
 import '../../services/item_service.dart';
+import '../../services/request_limit_service.dart';
 import 'profile/public_profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _auth = FirebaseAuth.instance;
   final _db = FirebaseFirestore.instance;
   final _itemService = ItemService();
+  final _requestLimitService = RequestLimitService();
 
   bool get _canPost => (_auth.currentUser != null);
   bool get _canRequest => (_auth.currentUser != null);
@@ -35,10 +37,40 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _requestItem({required String itemId, required String ownerId, required String title}) async {
+    // Check request limit first
+    final limitInfo = await _requestLimitService.checkRequestLimit();
+    if (!(limitInfo['canRequest'] as bool)) {
+      final current = limitInfo['currentCount'] as int;
+      final limit = limitInfo['limit'] as int;
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Monthly Limit Reached'),
+          content: Text(
+            'You have used all your requests this month ($current/$limit).\n\n'
+            'Your request limit will reset next month. Please try again later.',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK')),
+          ],
+        ),
+      );
+      return;
+    }
+
     try {
       await _itemService.createRequest(itemId: itemId, ownerId: ownerId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request sent')));
+      
+      // Get updated stats
+      final stats = await _requestLimitService.checkRequestLimit();
+      final used = stats['currentCount'] as int;
+      final limit = stats['limit'] as int;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Request sent ($used/$limit requests used this month)')),
+      );
     } catch (e) {
       if (!mounted) return;
       await showDialog<void>(

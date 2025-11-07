@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'supabase_image_service.dart';
+import 'request_limit_service.dart';
 import '../models/item.dart';
 
 class ItemService {
@@ -12,6 +13,7 @@ class ItemService {
 
   // You can switch to an 'items' bucket later if you create it + add policies.
   final _img = SupabaseImageService(bucket: 'avatars');
+  final _requestLimitService = RequestLimitService();
 
   /// Create item with optional image
   Future<String> createItem({
@@ -161,6 +163,14 @@ class ItemService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not logged in');
 
+    // Check monthly request limit
+    final limitInfo = await _requestLimitService.checkRequestLimit();
+    if (!(limitInfo['canRequest'] as bool)) {
+      final current = limitInfo['currentCount'] as int;
+      final limit = limitInfo['limit'] as int;
+      throw Exception('Monthly request limit reached ($current/$limit). Please try again next month.');
+    }
+
     // Prevent duplicate requests from the same seeker for same item
     final existing = await _db
         .collection('requests')
@@ -191,6 +201,9 @@ class ItemService {
       'status': 'pending', // pending | approved | rejected | completed
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    // Increment monthly request count
+    await _requestLimitService.incrementRequestCount();
   }
 
   /// Donor: incoming requests for my items

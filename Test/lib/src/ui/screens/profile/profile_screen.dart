@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/chatbot/chatbot_wrapper.dart';
 import '../../../services/review_service.dart';
+import '../../../services/request_limit_service.dart';
 
 /// Hardcoded admin identity + hosted photo URL (as in your project)
 const String kAdminEmail = 'ug2102049@cse.pstu.ac.bd';
@@ -82,14 +83,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final r = role.trim().toLowerCase();
         if (r == 'admin') {
           _safeNav('/admin-approval'); // admin approval panel
-        } else if (r == 'donor') {
-          _safeNav('/donor');
-        } else if (r == 'seeker') {
-          _safeNav('/seeker');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No role set yet. Please edit your profile.')),
-          );
+          _safeNav('/donor'); // All users go to donor dashboard
         }
         break;
       case 2: // Search
@@ -245,6 +240,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                 ),
+
+                const SizedBox(height: 12),
+
+                // User Stats Card (Donated Items, Requested Items, Monthly Requests)
+                if (!showAdminStuff)
+                  FutureBuilder<Map<String, dynamic>>(
+                    future: RequestLimitService().getUserStats(),
+                    builder: (ctx, statsSnap) {
+                      if (!statsSnap.hasData) {
+                        return const SizedBox(
+                          height: 60,
+                          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        );
+                      }
+                      
+                      final stats = statsSnap.data!;
+                      final donatedCount = stats['donatedCount'] as int;
+                      final requestedCount = stats['requestedCount'] as int;
+                      final monthlyUsed = stats['monthlyRequestsUsed'] as int;
+                      final monthlyLimit = stats['monthlyRequestsLimit'] as int;
+                      final canRequest = stats['canRequest'] as bool;
+
+                      return Card(
+                        elevation: 0,
+                        color: Colors.green.shade50,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              const Text(
+                                'My Activity',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _StatColumn(
+                                    icon: Icons.volunteer_activism,
+                                    label: 'Donated',
+                                    value: '$donatedCount',
+                                    color: Colors.blue,
+                                  ),
+                                  _StatColumn(
+                                    icon: Icons.request_page,
+                                    label: 'Requested',
+                                    value: '$requestedCount',
+                                    color: Colors.orange,
+                                  ),
+                                  _StatColumn(
+                                    icon: Icons.calendar_month,
+                                    label: 'This Month',
+                                    value: '$monthlyUsed/$monthlyLimit',
+                                    color: canRequest ? Colors.green : Colors.red,
+                                    subtitle: canRequest ? 'Available' : 'Limit Reached',
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
 
                 const SizedBox(height: 8),
 
@@ -478,6 +542,57 @@ class _StatChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StatColumn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  final String? subtitle;
+
+  const _StatColumn({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+    this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 32),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        if (subtitle != null)
+          Text(
+            subtitle!,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[600],
+            ),
+          ),
+      ],
     );
   }
 }

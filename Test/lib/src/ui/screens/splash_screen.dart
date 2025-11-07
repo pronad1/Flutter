@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math';
+import '../../services/item_service.dart';
 // If theme.dart is unused here, you can remove this import safely.
 // import '../../config/theme.dart';
 
@@ -21,6 +24,9 @@ class _SplashScreenState extends State<SplashScreen>
   final GlobalKey _categoriesKey = GlobalKey();
   final GlobalKey _howItWorksKey = GlobalKey();
   final GlobalKey _aboutKey = GlobalKey();
+
+  final _db = FirebaseFirestore.instance;
+  final _itemService = ItemService();
 
   @override
   void initState() {
@@ -119,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             ListTile(
               leading: const Icon(Icons.category),
-              title: const Text('Categories'),
+              title: const Text('Browse Items'),
               onTap: () {
                 Navigator.pop(context);
                 _scrollToSection(_categoriesKey);
@@ -210,7 +216,7 @@ class _SplashScreenState extends State<SplashScreen>
                           side: const BorderSide(color: Colors.green),
                         ),
                         child: const Text(
-                          "Browse Categories",
+                          "Browse Items",
                           style: TextStyle(color: Colors.green),
                         ),
                       ),
@@ -218,7 +224,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 40),
 
-                  // Categories
+                  // Posted Items Section (replacing categories)
                   Container(
                     key: _categoriesKey,
                     child: Column(
@@ -233,35 +239,197 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          "From electronics to clothing, find or donate items in these categories",
+                          "Browse available items posted by donors in your community",
                           style: TextStyle(color: Colors.grey[700]),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 20),
-                        GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          children: [
-                            _buildCategoryCard(Icons.phone_android, "Electronics",
-                                "Phones, tablets, laptops and gadgets"),
-                            _buildCategoryCard(Icons.kitchen, "Appliances",
-                                "Kitchen and home appliances"),
-                            _buildCategoryCard(Icons.pedal_bike, "Bicycles",
-                                "Bikes, scooters and transport"),
-                            _buildCategoryCard(Icons.checkroom, "Clothing",
-                                "Garments, shoes and accessories"),
-                            _buildCategoryCard(Icons.chair, "Furniture",
-                                "Tables, chairs and home fixtures"),
-                            _buildCategoryCard(Icons.headphones, "Audio",
-                                "Speakers, headphones and equipment"),
-                            _buildCategoryCard(Icons.coffee, "Kitchenware",
-                                "Utensils, machines and tools"),
-                            _buildCategoryCard(Icons.build, "Tools",
-                                "Garden tools, DIY equipment"),
-                          ],
+                        // Stream items from Firestore
+                        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                          stream: _db
+                              .collection('items')
+                              .orderBy('createdAt', descending: true)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError) {
+                              return Center(
+                                child: Text(
+                                  'Failed to load items',
+                                  style: TextStyle(color: Colors.grey[700]),
+                                ),
+                              );
+                            }
+                            
+                            if (!snapshot.hasData) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+
+                            final docs = snapshot.data!.docs;
+                            if (docs.isEmpty) {
+                              return Center(
+                                child: Text(
+                                  'No items available yet. Be the first to post!',
+                                  style: TextStyle(color: Colors.grey[700]),
+                                ),
+                              );
+                            }
+
+                            // Get owner IDs for batch fetching names
+                            final ownerIds = docs
+                                .map((e) => (e.data()['ownerId'] ?? '').toString())
+                                .where((s) => s.isNotEmpty)
+                                .toSet()
+                                .toList();
+
+                            return FutureBuilder<Map<String, String>>(
+                              future: _itemService.getUserNames(ownerIds),
+                              builder: (ctx, namesSnap) {
+                                final names = namesSnap.data ?? {};
+                                
+                                return ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: docs.length,
+                                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                  itemBuilder: (context, i) {
+                                    final doc = docs[i];
+                                    final d = doc.data();
+                                    final id = doc.id;
+                                    final ownerId = (d['ownerId'] ?? '').toString();
+                                    final title = (d['title'] ?? '').toString();
+                                    final desc = (d['description'] ?? '').toString();
+                                    final pickupAddress = (d['pickupAddress'] ?? '').toString();
+                                    final imageUrl = (d['imageUrl'] ?? '').toString();
+                                    final ownerNameDoc = (d['ownerName'] ?? '').toString();
+                                    
+                                    var resolvedName = (ownerNameDoc.trim().isNotEmpty && 
+                                        ownerNameDoc.trim() != '(No name)')
+                                        ? ownerNameDoc
+                                        : (names[ownerId] ?? '(No name)');
+                                    
+                                    final displayName = (resolvedName.trim() == '(No name)')
+                                        ? (ownerId.isNotEmpty 
+                                            ? 'ID:${ownerId.substring(0, min(8, ownerId.length))}' 
+                                            : '(No name)')
+                                        : resolvedName;
+
+                                    return Card(
+                                      elevation: 2,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () {
+                                          // Redirect to signup page when unauthenticated user clicks item
+                                          Navigator.pushNamed(context, '/signup');
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(12),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius: BorderRadius.circular(10),
+                                                child: imageUrl.isNotEmpty
+                                                    ? Image.network(
+                                                        imageUrl,
+                                                        width: 88,
+                                                        height: 88,
+                                                        fit: BoxFit.cover,
+                                                      )
+                                                    : Container(
+                                                        width: 88,
+                                                        height: 88,
+                                                        color: Colors.black12,
+                                                        child: const Icon(
+                                                          Icons.image_not_supported_outlined,
+                                                        ),
+                                                      ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      title.isEmpty ? '(Untitled)' : title,
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.w700,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    Text(
+                                                      desc.isEmpty ? 'No description.' : desc,
+                                                      style: const TextStyle(color: Colors.black87),
+                                                      maxLines: 2,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                    if (pickupAddress.isNotEmpty) ...[
+                                                      const SizedBox(height: 6),
+                                                      Row(
+                                                        children: [
+                                                          Icon(Icons.location_on, 
+                                                              size: 14, 
+                                                              color: Colors.red[600]),
+                                                          const SizedBox(width: 4),
+                                                          Expanded(
+                                                            child: Text(
+                                                              'Pickup: $pickupAddress',
+                                                              style: TextStyle(
+                                                                color: Colors.red[700],
+                                                                fontSize: 12,
+                                                                fontWeight: FontWeight.w500,
+                                                              ),
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                    const SizedBox(height: 8),
+                                                    if (displayName.startsWith('ID:') || 
+                                                        displayName == '(No name)')
+                                                      FutureBuilder<String>(
+                                                        future: _itemService.getUserName(ownerId),
+                                                        builder: (ctx, fb) {
+                                                          final name = (fb.hasData && 
+                                                              fb.data!.trim().isNotEmpty && 
+                                                              fb.data! != '(No name)') 
+                                                              ? fb.data! 
+                                                              : displayName;
+                                                          return Text(
+                                                            'Donor: $name · Posted: ${_itemService.formatTimestamp(d['createdAt'])}',
+                                                            style: TextStyle(
+                                                              color: Colors.grey[700], 
+                                                              fontSize: 12,
+                                                            ),
+                                                          );
+                                                        },
+                                                      )
+                                                    else
+                                                      Text(
+                                                        'Donor: $displayName · Posted: ${_itemService.formatTimestamp(d['createdAt'])}',
+                                                        style: TextStyle(
+                                                          color: Colors.grey[700], 
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -383,29 +551,6 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryCard(IconData icon, String title, String subtitle) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40, color: Colors.green),
-            const SizedBox(height: 10),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[700], fontSize: 12),
-            ),
-          ],
-        ),
       ),
     );
   }

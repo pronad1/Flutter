@@ -48,7 +48,8 @@ class AppBottomNav extends StatelessWidget {
       builder: (context, snap) {
         final data = snap.data?.data() ?? const {};
         final roleRaw = (data['role'] ?? '').toString();
-        final roleTitle = _rolePretty(roleRaw).isEmpty ? 'Role' : _rolePretty(roleRaw);
+        // All users get "Donor" label (since everyone can donate and request)
+        final roleTitle = 'Donor';
 
         return NavigationBar(
           selectedIndex: selectedIndex,
@@ -63,7 +64,7 @@ class AppBottomNav extends StatelessWidget {
             NavigationDestination(
               icon: const Icon(Icons.volunteer_activism_outlined),
               selectedIcon: const Icon(Icons.volunteer_activism_rounded),
-              label: roleTitle, // Admin / Donor / Seeker / Role
+              label: roleTitle, // Always "Donor" for all users
             ),
             const NavigationDestination(
               icon: Icon(Icons.search_outlined),
@@ -99,16 +100,12 @@ class AppBottomNav extends StatelessWidget {
         targetRoute = Routes.home;
         break;
       case 1:
+        // All users go to donor dashboard (which will show both donated & requested items)
         final r = role.trim().toLowerCase();
         if (r == 'admin') {
           targetRoute = Routes.adminApproval;
-        } else if (r == 'donor') {
-          targetRoute = Routes.donor;
-        } else if (r == 'seeker') {
-          targetRoute = Routes.seeker;
         } else {
-          // No role yet → send to Edit Profile to pick a role
-          targetRoute = Routes.editProfile;
+          targetRoute = Routes.donor; // Everyone gets donor dashboard
         }
         break;
       case 2:
