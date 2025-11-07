@@ -146,11 +146,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () {
-                        // Open the donor's public profile when tapping the item card
+                        // Open the donor's public profile with the clicked item
                         if (ownerId.isNotEmpty) {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => PublicProfileScreen(userId: ownerId)),
+                            MaterialPageRoute(
+                              builder: (_) => PublicProfileScreen(
+                                userId: ownerId,
+                                itemId: itemId,
+                              ),
+                            ),
                           );
                         }
                       },

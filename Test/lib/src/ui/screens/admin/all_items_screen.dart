@@ -185,12 +185,15 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          // Navigate to donor's public profile (same as home screen)
+          // Navigate to donor's public profile with the clicked item
           if (ownerId.isNotEmpty) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => PublicProfileScreen(userId: ownerId),
+                builder: (_) => PublicProfileScreen(
+                  userId: ownerId,
+                  itemId: itemId,
+                ),
               ),
             );
           } else {
