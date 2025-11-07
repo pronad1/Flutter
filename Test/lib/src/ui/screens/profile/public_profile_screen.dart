@@ -9,7 +9,8 @@ import '../../../services/item_service.dart';
 
 class PublicProfileScreen extends StatefulWidget {
   final String userId;
-  const PublicProfileScreen({super.key, required this.userId});
+  final String? itemId; // Optional: Show this specific item prominently
+  const PublicProfileScreen({super.key, required this.userId, this.itemId});
 
   @override
   State<PublicProfileScreen> createState() => _PublicProfileScreenState();
@@ -124,6 +125,33 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error opening email: $e')),
+      );
+    }
+  }
+
+  Future<void> _makePhoneCall(String phone) async {
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number not available')),
+      );
+      return;
+    }
+    
+    final uri = Uri(scheme: 'tel', path: phone);
+    try {
+      final canLaunch = await canLaunchUrl(uri);
+      if (canLaunch) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not make phone call.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
@@ -443,198 +471,193 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
     final name = (data['name'] ?? data['displayName'] ?? '').toString();
     final bio = (data['bio'] ?? '').toString();
     final email = (data['email'] ?? '').toString();
+    final phone = (data['phone'] ?? data['phoneNumber'] ?? '').toString();
     final avatar = (data['photoUrl'] ?? data['profilePicUrl'] ?? '').toString();
 
-    // Debug: Print what data we have
-    debugPrint('📊 Profile data for ${widget.userId}:');
-    debugPrint('   name: ${name.isEmpty ? "(empty)" : name}');
-    debugPrint('   bio: ${bio.isEmpty ? "(empty)" : bio}');
-    debugPrint('   email: ${email.isEmpty ? "(empty)" : email}');
-    debugPrint('   avatar: ${avatar.isEmpty ? "(empty)" : avatar}');
-
-    final isProfileIncomplete = bio.isEmpty || avatar.isEmpty;
-    final isOwnProfile = _auth.currentUser?.uid == widget.userId;
-
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Show banner if profile is incomplete
-          if (isProfileIncomplete) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                border: Border.all(color: Colors.orange.shade200),
-                borderRadius: BorderRadius.circular(8),
+          // If itemId is provided, show the clicked item prominently
+          if (widget.itemId != null) ...[
+            _buildClickedItemCard(),
+            const SizedBox(height: 16),
+          ],
+          
+          // Donor Profile Card
+          Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue.shade50, Colors.white],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Header with avatar
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.orange.shade700),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          isOwnProfile 
-                            ? 'Your public profile is incomplete. Please update your profile.'
-                            : 'This profile is incomplete.',
-                          style: TextStyle(color: Colors.orange.shade900, fontSize: 13, fontWeight: FontWeight.bold),
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: avatar.isNotEmpty ? NetworkImage(avatar) : null,
+                        backgroundColor: Colors.blue.shade100,
+                        child: avatar.isEmpty
+                            ? const Icon(Icons.person, size: 50, color: Colors.blue)
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        name.isEmpty ? 'Donor' : name,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                    ],
-                  ),
-                  if (isOwnProfile) ...[
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        // Force sync now
-                        await _autoSyncProfile();
-                        // Refresh the page
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('✅ Profile synced! Pull down to refresh.')),
+                      const SizedBox(height: 8),
+                      // Rating
+                      FutureBuilder<Map<String, dynamic>>(
+                        future: _reviewService.fetchRatingSummary(widget.userId),
+                        builder: (ctx, ratSnap) {
+                          if (!ratSnap.hasData) return const SizedBox.shrink();
+                          final avgRating = (ratSnap.data?['avg'] ?? 0.0) as double;
+                          final count = (ratSnap.data?['count'] ?? 0) as int;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ...List.generate(5, (i) {
+                                if (i < avgRating.floor()) {
+                                  return const Icon(Icons.star, size: 20, color: Colors.amber);
+                                } else if (i < avgRating.ceil() && avgRating % 1 != 0) {
+                                  return const Icon(Icons.star_half, size: 20, color: Colors.amber);
+                                } else {
+                                  return const Icon(Icons.star_border, size: 20, color: Colors.amber);
+                                }
+                              }),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${avgRating.toStringAsFixed(1)} ($count)',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
                           );
-                        }
-                      },
-                      icon: const Icon(Icons.sync, size: 18),
-                      label: const Text('Sync Profile Now'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange.shade600,
-                        foregroundColor: Colors.white,
+                        },
                       ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-          // Profile header with avatar and info
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundImage: avatar.isNotEmpty ? NetworkImage(avatar) as ImageProvider : null,
-                backgroundColor: Colors.blue.shade100,
-                child: avatar.isEmpty ? const Icon(Icons.person, size: 40, color: Colors.blue) : null,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name.isEmpty ? '(No name)' : name, 
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    // Rating display at top with stars
-                    FutureBuilder<Map<String, dynamic>>(
-                      future: _reviewService.fetchRatingSummary(widget.userId),
-                      builder: (ctx, ratSnap) {
-                        if (!ratSnap.hasData) return const SizedBox.shrink();
-                        final avgRating = (ratSnap.data?['avg'] ?? 0.0) as double;  // Fixed: was 'average', should be 'avg'
-                        final count = (ratSnap.data?['count'] ?? 0) as int;
-                        return Row(
-                          children: [
-                            ...List.generate(5, (i) {
-                              if (i < avgRating.floor()) {
-                                return const Icon(Icons.star, size: 18, color: Colors.amber);
-                              } else if (i < avgRating.ceil() && avgRating % 1 != 0) {
-                                return const Icon(Icons.star_half, size: 18, color: Colors.amber);
-                              } else {
-                                return const Icon(Icons.star_border, size: 18, color: Colors.amber);
-                              }
-                            }),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${avgRating.toStringAsFixed(1)} ($count)',
-                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      bio.isEmpty ? 'No bio provided' : bio,
-                      style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          // Email button if email exists
-          if (email.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.email_outlined),
-                label: const Text('Send Email'),
-                onPressed: () => _sendEmail(email),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 20),
-          const Divider(),
-          const SizedBox(height: 12),
-          // Rating summary and reviews
-          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: _reviewService.streamReviewsForDonor(widget.userId),
-            builder: (context, rsnap) {
-              if (rsnap.hasError) return const SizedBox.shrink();
-              final docs = rsnap.data?.docs ?? [];
-              double avg = 0;
-              if (docs.isNotEmpty) {
-                var total = 0;
-                for (final d in docs) total += (d.data()['rating'] as int?) ?? 0;
-                avg = total / docs.length;
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text('Rating: ${avg.toStringAsFixed(1)}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 8),
-                      Text('(${docs.length} review${docs.length == 1 ? '' : 's'})', style: const TextStyle(color: Colors.grey)),
+                      if (bio.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          bio,
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 15,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  Text('Reviews', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  if (docs.isEmpty) const Text('No reviews yet.'),
-                  ...docs.map((d) {
-                    final rd = d.data();
-                    final reviewer = (rd['reviewerName'] ?? '').toString();
-                    final rtext = (rd['text'] ?? '').toString();
-                    final rating = (rd['rating'] as int?) ?? 0;
-                    final created = rd['createdAt'];
-                    String when = '';
-                    if (created is Timestamp) {
-                      final dt = created.toDate();
-                      when = '${dt.year}-${dt.month.toString().padLeft(2,'0')}-${dt.day.toString().padLeft(2,'0')}';
-                    }
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(child: Text((reviewer.isEmpty ? 'U' : reviewer.substring(0,1)).toUpperCase())),
-                      title: Row(children: [Text(reviewer.isEmpty ? '(User)' : reviewer), const SizedBox(width: 8), ...List.generate(rating, (_) => const Icon(Icons.star, size: 14, color: Colors.amber))]),
-                      subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [if (rtext.isNotEmpty) Text(rtext), if (when.isNotEmpty) Text(when, style: const TextStyle(fontSize: 12, color: Colors.grey))]),
-                    );
-                  }).toList(),
+                ),
+                
+                // Contact Buttons
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Contact Donor',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          // Phone Button
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: phone.isNotEmpty
+                                  ? () => _makePhoneCall(phone)
+                                  : null,
+                              icon: const Icon(Icons.phone, size: 20),
+                              label: const Text('Call'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.grey[300],
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Email Button
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: email.isNotEmpty
+                                  ? () => _sendEmail(email)
+                                  : null,
+                              icon: const Icon(Icons.email, size: 20),
+                              label: const Text('Email'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.grey[300],
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (phone.isEmpty && email.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            'Contact information not available',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
                 ],
               );
             },

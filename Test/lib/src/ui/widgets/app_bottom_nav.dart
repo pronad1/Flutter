@@ -21,6 +21,7 @@ class AppBottomNav extends StatelessWidget {
     Routes.donor: 1,
     Routes.seeker: 1,
     Routes.adminApproval: 1,
+    Routes.adminDashboard: 1,
     Routes.search: 2,
     Routes.editProfile: 3,
     Routes.profile: 4,
@@ -48,8 +49,8 @@ class AppBottomNav extends StatelessWidget {
       builder: (context, snap) {
         final data = snap.data?.data() ?? const {};
         final roleRaw = (data['role'] ?? '').toString();
-        // All users get "Donor" label (since everyone can donate and request)
-        final roleTitle = 'Donor';
+        // Show "Admin Panel" for admin, "Donor" for regular users
+        final roleTitle = roleRaw.trim().toLowerCase() == 'admin' ? 'Admin Panel' : 'Donor';
 
         return NavigationBar(
           selectedIndex: selectedIndex,
@@ -62,9 +63,13 @@ class AppBottomNav extends StatelessWidget {
               label: 'Home',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.volunteer_activism_outlined),
-              selectedIcon: const Icon(Icons.volunteer_activism_rounded),
-              label: roleTitle, // Always "Donor" for all users
+              icon: roleRaw.trim().toLowerCase() == 'admin'
+                  ? const Icon(Icons.admin_panel_settings_outlined)
+                  : const Icon(Icons.volunteer_activism_outlined),
+              selectedIcon: roleRaw.trim().toLowerCase() == 'admin'
+                  ? const Icon(Icons.admin_panel_settings)
+                  : const Icon(Icons.volunteer_activism_rounded),
+              label: roleTitle, // "Admin Panel" for admin, "Donor" for others
             ),
             const NavigationDestination(
               icon: Icon(Icons.search_outlined),
@@ -100,10 +105,10 @@ class AppBottomNav extends StatelessWidget {
         targetRoute = Routes.home;
         break;
       case 1:
-        // All users go to donor dashboard (which will show both donated & requested items)
+        // Admin users go to admin dashboard, regular users to donor dashboard
         final r = role.trim().toLowerCase();
         if (r == 'admin') {
-          targetRoute = Routes.adminApproval;
+          targetRoute = Routes.adminDashboard;
         } else {
           targetRoute = Routes.donor; // Everyone gets donor dashboard
         }

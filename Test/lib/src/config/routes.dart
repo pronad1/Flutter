@@ -10,6 +10,10 @@ import '../ui/screens/create_item_screen.dart';
 
 // Auth & core
 import '../ui/screens/admin/admin_approval_screen.dart';
+import '../ui/screens/admin/admin_dashboard_screen.dart';
+import '../ui/screens/admin/analytics_screen.dart';
+import '../ui/screens/admin/manage_users_screen.dart';
+import '../ui/screens/admin/all_items_screen.dart';
 import '../ui/screens/splash_screen.dart';
 import '../ui/screens/auth/login_screen.dart';
 import '../ui/screens/auth/signup_screen.dart';
@@ -24,6 +28,9 @@ import '../ui/screens/role/seeker_dashboard.dart' as seeker_screen;
 // Search
 import '../ui/screens/search_screen.dart';
 
+// Seeker History
+import '../ui/screens/seeker_history_screen.dart';
+
 class Routes {
   // Route name constants
   static const welcome = '/welcome';
@@ -33,10 +40,15 @@ class Routes {
   static const home = '/home';
   static const donor = '/donor';
   static const seeker = '/seeker';
+  static const seekerHistory = '/seeker-history';
   static const search = '/search';
   static const profile = '/profile';
   static const editProfile = '/edit-profile';
   static const adminApproval = '/admin-approval';
+  static const adminDashboard = '/admin-dashboard';
+  static const analytics = '/analytics';
+  static const manageUsers = '/manage-users';
+  static const allItems = '/all-items';
   static const createItem = '/create-item';
   static const editItem = '/edit-item'; // ✅ NEW
 
@@ -64,6 +76,9 @@ class Routes {
       case seeker:
         return MaterialPageRoute(builder: (_) => seeker_screen.SeekerDashboard());
 
+      case seekerHistory:
+        return MaterialPageRoute(builder: (_) => const SeekerHistoryScreen());
+
       case search:
         return MaterialPageRoute(builder: (_) => const SearchScreen());
 
@@ -75,6 +90,18 @@ class Routes {
 
       case adminApproval:
         return MaterialPageRoute(builder: (_) => const _AdminGate());
+
+      case adminDashboard:
+        return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+
+      case analytics:
+        return MaterialPageRoute(builder: (_) => const AnalyticsScreen());
+
+      case manageUsers:
+        return MaterialPageRoute(builder: (_) => const ManageUsersScreen());
+
+      case allItems:
+        return MaterialPageRoute(builder: (_) => const AllItemsScreen());
 
       case createItem:
         return MaterialPageRoute(builder: (_) => const CreateItemScreen());

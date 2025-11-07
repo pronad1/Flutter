@@ -263,45 +263,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       final canRequest = stats['canRequest'] as bool;
 
                       return Card(
-                        elevation: 0,
+                        elevation: 2,
                         color: Colors.green.shade50,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             children: [
-                              const Text(
-                                'My Activity',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'My Activity',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: canRequest ? Colors.green : Colors.red,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          canRequest ? Icons.check_circle : Icons.block,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '$monthlyUsed/$monthlyLimit',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 16),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  _StatColumn(
-                                    icon: Icons.volunteer_activism,
-                                    label: 'Donated',
-                                    value: '$donatedCount',
-                                    color: Colors.blue,
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () => Navigator.pushNamed(context, '/donor'),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: _StatColumn(
+                                        icon: Icons.volunteer_activism,
+                                        label: 'Donated',
+                                        value: '$donatedCount',
+                                        color: Colors.blue,
+                                      ),
+                                    ),
                                   ),
-                                  _StatColumn(
-                                    icon: Icons.request_page,
-                                    label: 'Requested',
-                                    value: '$requestedCount',
-                                    color: Colors.orange,
+                                  Container(width: 1, height: 50, color: Colors.green.shade200),
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () => Navigator.pushNamed(context, '/seeker-history'),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: _StatColumn(
+                                        icon: Icons.request_page,
+                                        label: 'Requested',
+                                        value: '$requestedCount',
+                                        color: Colors.orange,
+                                      ),
+                                    ),
                                   ),
-                                  _StatColumn(
-                                    icon: Icons.calendar_month,
-                                    label: 'This Month',
-                                    value: '$monthlyUsed/$monthlyLimit',
-                                    color: canRequest ? Colors.green : Colors.red,
-                                    subtitle: canRequest ? 'Available' : 'Limit Reached',
+                                  Container(width: 1, height: 50, color: Colors.green.shade200),
+                                  Expanded(
+                                    child: _StatColumn(
+                                      icon: Icons.calendar_month,
+                                      label: 'This Month',
+                                      value: '$monthlyUsed/$monthlyLimit',
+                                      color: canRequest ? Colors.green : Colors.red,
+                                      subtitle: canRequest ? 'Available' : 'Limit Reached',
+                                    ),
                                   ),
                                 ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Tap on Donated or Requested to view details',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[600],
+                                  fontStyle: FontStyle.italic,
+                                ),
                               ),
                             ],
                           ),
@@ -321,63 +377,125 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 14),
 
-                // Badges: role / approval / email
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if (roleTitle.isNotEmpty)
-                      const _BadgeChip(icon: Icons.badge_outlined, label: 'Role'),
-                    if (roleTitle.isNotEmpty)
-                      _BadgeChip(icon: Icons.person_pin_circle_rounded, label: roleTitle),
-                    _BadgeChip(
-                      icon: approved ? Icons.verified_rounded : Icons.hourglass_bottom_rounded,
-                      label: approved ? 'Approved' : 'Pending',
-                      color: approved ? Colors.green : null,
-                    ),
-                    _BadgeChip(
-                      icon: emailVerified ? Icons.mark_email_read_rounded : Icons.mark_email_unread_rounded,
-                      label: emailVerified ? 'Email Verified' : 'Email Not Verified',
-                      color: emailVerified ? Colors.green : null,
-                    ),
-                    if (showAdminStuff)
-                      const _BadgeChip(icon: Icons.admin_panel_settings_rounded, label: 'Admin'),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Admin-only system stats
-                if (showAdminStuff) const _AdminStatsCard(),
-
-                const SizedBox(height: 8),
-
-                // Quick actions
-                Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Column(
+                // Badges - Redesigned for better alignment
+                if (!showAdminStuff)
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      ListTile(
-                        leading: const Icon(Icons.add_box_outlined),
-                        title: Text(
-                          role.toLowerCase() == 'donor' ? 'Post a new donation' : 'Create a request',
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          // TODO: navigate to create item/request screen
-                        },
+                      if (roleTitle.isNotEmpty)
+                        _BadgeChip(icon: Icons.person_pin_circle_rounded, label: roleTitle),
+                      _BadgeChip(
+                        icon: approved ? Icons.verified_rounded : Icons.hourglass_bottom_rounded,
+                        label: approved ? 'Approved' : 'Pending',
+                        color: approved ? Colors.green : Colors.orange,
                       ),
-                      const Divider(height: 0),
-                      const ListTile(
-                        leading: Icon(Icons.history_rounded),
-                        title: Text('Activity history'),
-                        trailing: Icon(Icons.chevron_right),
+                      _BadgeChip(
+                        icon: emailVerified ? Icons.mark_email_read_rounded : Icons.mark_email_unread_rounded,
+                        label: emailVerified ? 'Email Verified' : 'Email Not Verified',
+                        color: emailVerified ? Colors.green : Colors.orange,
                       ),
                     ],
                   ),
-                ),
+
+                // Admin Badges and Controls
+                if (showAdminStuff) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade900],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.admin_panel_settings, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'SYSTEM ADMINISTRATOR',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _BadgeChip(
+                        icon: Icons.verified_rounded,
+                        label: 'Verified Admin',
+                        color: Colors.green,
+                      ),
+                      const SizedBox(width: 8),
+                      _BadgeChip(
+                        icon: Icons.security,
+                        label: 'Full Access',
+                        color: Colors.blue,
+                      ),
+                    ],
+                  ),
+                ],
+
+                const SizedBox(height: 20),
+
+                // Admin Dashboard Cards
+                if (showAdminStuff) ...[
+                  const _AdminDashboardSection(),
+                  const SizedBox(height: 16),
+                ],
+
+                // Admin-only system stats (keep existing)
+                if (showAdminStuff) const _AdminStatsCard(),
+
+                // Professional Action Buttons (non-admin only)
+                if (!showAdminStuff) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.pushNamed(context, '/create-item'),
+                          icon: const Icon(Icons.add_circle_outline),
+                          label: const Text('Donate Item'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => Navigator.pushNamed(context, '/search'),
+                          icon: const Icon(Icons.search),
+                          label: const Text('Find Items'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            side: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+                const SizedBox(height: 8),
               ],
             ),
           );
@@ -453,6 +571,121 @@ class _BadgeChip extends StatelessWidget {
 
 /// --- Admin stats card --------------------------------------------------------
 
+class _AdminDashboardSection extends StatelessWidget {
+  const _AdminDashboardSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Admin Controls Card
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.dashboard_customize, color: Colors.deepPurple.shade700, size: 24),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Admin Controls',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 2.5,
+                  children: [
+                    _AdminActionButton(
+                      icon: Icons.people_alt,
+                      label: 'User Approvals',
+                      color: Colors.blue,
+                      onTap: () => Navigator.pushNamed(context, '/admin-approval'),
+                    ),
+                    _AdminActionButton(
+                      icon: Icons.manage_accounts,
+                      label: 'Manage Users',
+                      color: Colors.orange,
+                      onTap: () => Navigator.pushNamed(context, '/manage-users'),
+                    ),
+                    _AdminActionButton(
+                      icon: Icons.inventory_2,
+                      label: 'All Items',
+                      color: Colors.green,
+                      onTap: () => Navigator.pushNamed(context, '/all-items'),
+                    ),
+                    _AdminActionButton(
+                      icon: Icons.analytics,
+                      label: 'Analytics',
+                      color: Colors.purple,
+                      onTap: () => Navigator.pushNamed(context, '/analytics'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AdminActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _AdminActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3), width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AdminStatsCard extends StatelessWidget {
   const _AdminStatsCard({super.key});
 
@@ -461,18 +694,26 @@ class _AdminStatsCard extends StatelessWidget {
     final usersCol = FirebaseFirestore.instance.collection('users');
 
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: usersCol.snapshots(),
           builder: (context, snap) {
             if (snap.hasError) {
-              return Text('Failed to load stats: ${snap.error}',
-                  style: const TextStyle(color: Colors.red));
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text('Failed to load stats: ${snap.error}',
+                    style: const TextStyle(color: Colors.red)),
+              );
             }
-            if (!snap.hasData) return const LinearProgressIndicator();
+            if (!snap.hasData) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
 
             final docs = snap.data!.docs;
             final total = docs.length;
@@ -493,16 +734,49 @@ class _AdminStatsCard extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('System Stats', style: TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                Row(
                   children: [
-                    _StatChip(label: 'Total', value: total),
-                    _StatChip(label: 'Donors', value: donors),
-                    _StatChip(label: 'Seekers', value: seekers),
-                    _StatChip(label: 'Pending', value: pending),
+                    Icon(Icons.bar_chart, color: Colors.deepPurple.shade700, size: 24),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'System Statistics',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.5,
+                  children: [
+                    _AdminStatCard(
+                      icon: Icons.people,
+                      label: 'Total Users',
+                      value: total.toString(),
+                      color: Colors.blue,
+                    ),
+                    _AdminStatCard(
+                      icon: Icons.volunteer_activism,
+                      label: 'Donors',
+                      value: donors.toString(),
+                      color: Colors.green,
+                    ),
+                    _AdminStatCard(
+                      icon: Icons.handshake,
+                      label: 'Seekers',
+                      value: seekers.toString(),
+                      color: Colors.orange,
+                    ),
+                    _AdminStatCard(
+                      icon: Icons.pending_actions,
+                      label: 'Pending',
+                      value: pending.toString(),
+                      color: Colors.red,
+                    ),
                   ],
                 ),
               ],
@@ -514,30 +788,49 @@ class _AdminStatsCard extends StatelessWidget {
   }
 }
 
-class _StatChip extends StatelessWidget {
+class _AdminStatCard extends StatelessWidget {
+  final IconData icon;
   final String label;
-  final int value;
-  const _StatChip({required this.label, required this.value, super.key});
+  final String value;
+  final Color color;
+
+  const _AdminStatCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    return Chip(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label),
-          const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
-            child: Text(
-              value.toString(),
-              style: TextStyle(color: color, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
