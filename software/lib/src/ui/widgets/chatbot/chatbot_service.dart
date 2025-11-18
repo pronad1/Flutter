@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// AI Chatbot Service - Handles intelligent responses with real Firebase data
-/// This can be extended to use real AI APIs (OpenAI, Gemini, etc.)
+/// Enhanced AI Chatbot Service - Comprehensive ReuseHub Assistant
+/// Provides intelligent responses about items, users, requests, and all app features
 class ChatbotService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -13,15 +13,56 @@ class ChatbotService {
     await Future.delayed(const Duration(milliseconds: 1500));
 
     final message = userMessage.toLowerCase().trim();
+    
+    // Get current user context for personalized responses
+    final currentUser = _auth.currentUser;
 
+    // === PERSONALIZED USER QUERIES ===
+    if (_contains(message, ['my', 'i have', 'i posted', 'i donated', 'i requested'])) {
+      return await _getPersonalizedInfo(message, currentUser);
+    }
+
+    // === REAL-TIME DATA QUERIES ===
     // Statistics and count questions - ACCESS FIREBASE DATA
     if (_contains(message, ['how many', 'total', 'count', 'number of', 'statistics', 'stats'])) {
       return await _getStatistics(message);
     }
 
     // Recent items and posts
-    if (_contains(message, ['recent', 'latest', 'new', 'last posted', 'show items'])) {
+    if (_contains(message, ['recent', 'latest', 'new', 'last posted', 'show items', 'show me items'])) {
       return await _getRecentItems(message);
+    }
+    
+    // Available items queries
+    if (_contains(message, ['available', 'what\'s available', 'what can i get', 'items available'])) {
+      return await _getAvailableItems(message);
+    }
+    
+    // Item by category
+    if (_contains(message, ['electronics', 'computers', 'laptops', 'mobile', 'phones', 'furniture', 
+                            'appliances', 'books', 'education', 'sports', 'fitness', 'clothing', 
+                            'fashion', 'toys', 'games', 'kitchen', 'tools', 'hardware', 'garden'])) {
+      return await _getItemsByCategory(message);
+    }
+    
+    // Item by condition
+    if (_contains(message, ['brand new', 'like new', 'excellent', 'good condition', 'fair', 'used'])) {
+      return await _getItemsByCondition(message);
+    }
+    
+    // Monthly request limit
+    if (_contains(message, ['request limit', 'how many requests', 'monthly limit', 'request quota'])) {
+      return await _getRequestLimitInfo(currentUser);
+    }
+    
+    // User's requests status
+    if (_contains(message, ['my requests', 'requests status', 'check requests', 'pending requests'])) {
+      return await _getMyRequests(currentUser);
+    }
+    
+    // User's donations/items
+    if (_contains(message, ['my items', 'my donations', 'posted items', 'items i posted'])) {
+      return await _getMyDonations(currentUser);
     }
 
     // Donation-related questions
@@ -80,89 +121,254 @@ class ChatbotService {
     }
 
     // Greetings
-    if (_contains(message, ['hi', 'hello', 'hey', 'good morning', 'good afternoon'])) {
-      return '👋 Hello! I\'m here to help you with anything about the donation app. You can ask me about:\n\n'
-          '• How to donate items\n'
-          '• How to search and request items\n'
-          '• Profile and account settings\n'
-          '• Rating and reviews\n'
-          '• Any technical issues\n\n'
-          'What would you like to know?';
+    if (_contains(message, ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'])) {
+      final user = _auth.currentUser;
+      final greeting = _getTimeBasedGreeting();
+      final name = user?.displayName?.split(' ').first ?? 'there';
+      
+      return '$greeting $name! 👋\n\n'
+          'I\'m your **ReuseHub AI Assistant**. I can help you with:\n\n'
+          '**📦 Items & Donations**\n'
+          '• "Show me recent items"\n'
+          '• "What electronics are available?"\n'
+          '• "How do I post an item?"\n'
+          '• "My donations"\n\n'
+          '**🙋 Requests**\n'
+          '• "How to request an item?"\n'
+          '• "Check my requests"\n'
+          '• "What\'s my request limit?"\n\n'
+          '**📊 Statistics**\n'
+          '• "How many users?"\n'
+          '• "Total items posted?"\n'
+          '• "Available items?"\n\n'
+          '**👤 Profile & Account**\n'
+          '• "How to edit profile?"\n'
+          '• "How does rating work?"\n'
+          '• "Contact donor"\n\n'
+          '**🔧 Technical Help**\n'
+          '• "Login issues"\n'
+          '• "Photo upload problems"\n'
+          '• "Email verification"\n\n'
+          'What would you like to know? Just ask naturally! 😊';
+    }
+    
+    // Help and capabilities
+    if (_contains(message, ['what can you do', 'help me', 'capabilities', 'features', 'commands'])) {
+      return '🤖 **ReuseHub AI Assistant Capabilities**\n\n'
+          'I can provide information about:\n\n'
+          '**1️⃣ Real-Time Data (Live from Firebase)**\n'
+          '✅ Recent items posted\n'
+          '✅ Available items by category\n'
+          '✅ Items by condition\n'
+          '✅ Total users and statistics\n'
+          '✅ Your personal donations\n'
+          '✅ Your request status\n'
+          '✅ Request limit usage\n\n'
+          '**2️⃣ How-To Guides**\n'
+          '📖 Post/edit/delete items\n'
+          '📖 Search and request items\n'
+          '📖 Manage requests (approve/reject)\n'
+          '📖 Edit profile and settings\n'
+          '📖 Rating system\n'
+          '📖 Chat and messaging\n\n'
+          '**3️⃣ Troubleshooting**\n'
+          '🔧 Login problems\n'
+          '🔧 Email verification\n'
+          '🔧 Photo upload issues\n'
+          '🔧 App errors\n\n'
+          '**4️⃣ App Information**\n'
+          '📱 Categories (20+ available)\n'
+          '📱 Conditions (8 levels)\n'
+          '📱 Features and policies\n'
+          '📱 Best practices\n\n'
+          '**💡 Try These Questions:**\n'
+          '• "Show me available electronics"\n'
+          '• "How many items are posted?"\n'
+          '• "What\'s my request limit?"\n'
+          '• "How to donate an item?"\n'
+          '• "My pending requests"\n'
+          '• "Show recent donations"\n\n'
+          'Ask me anything! I\'m here to help! 😊';
     }
 
     // Thanks
     if (_contains(message, ['thank', 'thanks', 'appreciate'])) {
-      return '😊 You\'re welcome! Feel free to ask if you need any more help. Happy to assist!';
+      return '😊 You\'re welcome! Feel free to ask if you need any more help. Happy to assist!\n\n'
+          '💡 **Quick Tips:**\n'
+          '• Ask about specific items: "Show me laptops"\n'
+          '• Check your stats: "My donations" or "My requests"\n'
+          '• Get help: "How to post an item?"\n'
+          '• See data: "How many users?" or "Recent items"\n\n'
+          'I\'m always here to help! 🎉';
     }
 
     // Default response with suggestions
-    return '🤔 I\'m not sure I understood that. Here are some things I can help with:\n\n'
-        '• **Donating items** - How to post and manage donations\n'
-        '• **Requesting items** - How to find and request items you need\n'
-        '• **Profile setup** - Managing your account and visibility\n'
-        '• **Ratings & Reviews** - Understanding the feedback system\n'
-        '• **Technical support** - Solving any issues\n\n'
-        'Try asking a specific question or click one of the quick actions above!';
+    return '🤔 I\'m not quite sure what you\'re asking, but I\'m here to help!\n\n'
+        '**💡 Try asking about:**\n\n'
+        '**📦 Items:**\n'
+        '• "Show me recent items"\n'
+        '• "What electronics are available?"\n'
+        '• "Items in good condition"\n'
+        '• "Brand new items"\n\n'
+        '**🙋 Requests:**\n'
+        '• "How to request an item?"\n'
+        '• "Check my requests"\n'
+        '• "What\'s my request limit?"\n'
+        '• "My pending requests"\n\n'
+        '**📊 Statistics:**\n'
+        '• "How many items?"\n'
+        '• "Total users?"\n'
+        '• "Available items?"\n\n'
+        '**👤 Account:**\n'
+        '• "How to edit profile?"\n'
+        '• "My donations"\n'
+        '• "How does rating work?"\n\n'
+        '**🔧 Help:**\n'
+        '• "How to donate?"\n'
+        '• "How to search?"\n'
+        '• "Technical issues"\n\n'
+        'Or tap the quick action buttons above! 🎯';
   }
 
   bool _contains(String message, List<String> keywords) {
     return keywords.any((keyword) => message.contains(keyword));
+  }
+  
+  /// Get time-based greeting
+  String _getTimeBasedGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    if (hour < 21) return 'Good evening';
+    return 'Hello';
   }
 
   String _getDonationHelp(String message) {
     if (_contains(message, ['how', 'post', 'add', 'create'])) {
       return '📦 **How to Donate an Item:**\n\n'
           '1. Go to your **Profile** tab\n'
-          '2. Tap **"Post a new donation"**\n'
-          '3. Fill in:\n'
-          '   • Title (what is it?)\n'
-          '   • Description (condition, details)\n'
-          '   • Photo (optional but recommended)\n'
-          '   • Category (Home, Electronics, Books, etc.)\n'
-          '   • **Pickup Address** (where seekers can collect)\n'
+          '2. Tap **"Post a new donation"** or the + button\n'
+          '3. Fill in the details:\n'
+          '   • **Title** - What is it? (e.g., "Samsung Galaxy S10")\n'
+          '   • **Description** - Condition, features, details\n'
+          '   • **Photo** - Add clear photos (recommended)\n'
+          '   • **Category** - Choose from 20+ categories:\n'
+          '     - Electronics, Computers, Mobile Phones\n'
+          '     - Home & Furniture, Appliances\n'
+          '     - Books & Education, Sports & Fitness\n'
+          '     - Clothing & Fashion, Toys & Games\n'
+          '     - Kitchen, Tools, Garden, Baby & Kids\n'
+          '     - Health & Beauty, Automotive, Pet Supplies\n'
+          '     - Office Supplies, Art & Crafts, Musical Instruments\n'
+          '   • **Condition** - Brand New, Like New, Excellent, Good, Fair, Used, For Parts\n'
+          '   • **Pickup Address** - Where to collect (required)\n'
+          '   • **Price** (optional) - If selling instead of donating\n'
           '4. Tap **"Post Item"**\n\n'
-          '✅ Your item will appear on the home feed for seekers to request!';
+          '✅ Your item will appear on the home feed instantly!\n\n'
+          '💡 **Pro Tips:**\n'
+          '• Add multiple photos for better visibility\n'
+          '• Be honest about condition\n'
+          '• Provide clear pickup instructions\n'
+          '• Brand new items with prices get "Special Deal" badge!';
     }
 
     if (_contains(message, ['edit', 'update', 'change'])) {
       return '✏️ **Edit Your Donation:**\n\n'
-          '1. Go to **Donor Dashboard**\n'
-          '2. Find "My donated items"\n'
-          '3. Tap the edit icon on any item\n'
-          '4. Update details and tap "Save"\n\n'
-          'You can change the title, description, category, condition, and pickup address anytime!';
+          '1. Go to **Donor Dashboard** (Profile → My Donations)\n'
+          '2. Find "My donated items" section\n'
+          '3. Tap the **edit icon** (pencil) on any item\n'
+          '4. Update any details:\n'
+          '   • Title, description, photo\n'
+          '   • Category, condition\n'
+          '   • Pickup address\n'
+          '   • Price (if selling)\n'
+          '   • Availability status\n'
+          '5. Tap **"Save Changes"**\n\n'
+          '✅ Changes are reflected immediately!\n\n'
+          '⚠️ **Note:** Items with approved requests cannot be made available again until the request is completed.';
     }
 
     if (_contains(message, ['delete', 'remove'])) {
       return '🗑️ **Delete a Donation:**\n\n'
           '1. Go to **Donor Dashboard**\n'
           '2. Find the item you want to remove\n'
-          '3. Tap the delete icon\n'
+          '3. Tap the **delete icon** (trash)\n'
           '4. Confirm deletion\n\n'
-          '⚠️ Note: You cannot delete items that have approved requests.';
+          '⚠️ **Important Restrictions:**\n'
+          '• Cannot delete items with pending requests (reject them first)\n'
+          '• Cannot delete items with approved requests\n'
+          '• Deletion is permanent and cannot be undone\n\n'
+          '💡 **Alternative:** Mark item as unavailable instead of deleting.';
+    }
+    
+    if (_contains(message, ['price', 'sell', 'selling'])) {
+      return '💰 **Selling Items:**\n\n'
+          'ReuseHub supports both **donations** and **selling** items!\n\n'
+          '**To Sell an Item:**\n'
+          '1. When posting, enable "Selling" toggle\n'
+          '2. Enter your price\n'
+          '3. Choose condition\n\n'
+          '**Special Deals:**\n'
+          '• Brand new items with prices get a special badge\n'
+          '• Appears in "Special Deals" section\n'
+          '• Attracts more attention!\n\n'
+          '**Pricing Tips:**\n'
+          '• Research similar items\n'
+          '• Consider condition\n'
+          '• Be competitive\n'
+          '• Clearly state "firm" or "negotiable"';
     }
 
     return '📦 **Donation Features:**\n\n'
-        '• Post items with photos and descriptions\n'
+        '**What You Can Do:**\n'
+        '• Post unlimited items (donations or selling)\n'
+        '• Add photos and detailed descriptions\n'
+        '• Choose from 20+ categories\n'
+        '• Set condition (8 levels from Brand New to For Parts)\n'
         '• Add pickup address for easy collection\n'
-        '• Manage incoming requests\n'
-        '• Edit or delete your items\n'
-        '• Track your donation history\n\n'
+        '• Manage incoming requests (approve/reject)\n'
+        '• Edit or delete your items anytime\n'
+        '• Track your donation history\n'
+        '• Get ratings from seekers\n\n'
+        '**Categories Available:**\n'
+        'Electronics, Computers, Phones, Furniture, Appliances, Books, Sports, Clothing, Toys, Kitchen, Tools, Garden, Baby Items, Health & Beauty, Automotive, Pet Supplies, Office, Arts & Crafts, Music, and more!\n\n'
         'What specific help do you need with donations?';
   }
 
   String _getSearchHelp(String message) {
     return '🔍 **How to Search for Items:**\n\n'
-        '1. Tap the **Search** icon in bottom navigation\n'
-        '2. Type what you\'re looking for (e.g., "laptop", "books")\n'
-        '3. Browse results\n'
-        '4. Tap any item to see details\n'
-        '5. Tap donor\'s name to view their profile and ratings\n\n'
-        '💡 **Tips:**\n'
-        '• Use simple keywords\n'
-        '• Check the pickup address before requesting\n'
-        '• View donor profiles to see their ratings\n'
-        '• Requested items show "Requested" status';
+        '**Method 1: Search Tab**\n'
+        '1. Tap **Search** icon in bottom navigation\n'
+        '2. Type keywords (e.g., "laptop", "books", "chair")\n'
+        '3. Browse search results\n'
+        '4. Tap any item for full details\n\n'
+        '**Method 2: Home Screen Filters**\n'
+        '1. Go to **Home** tab\n'
+        '2. Use filter buttons:\n'
+        '   • **Category** - Filter by 20+ categories\n'
+        '   • **Condition** - Brand New, Like New, Excellent, Good, Fair, Used, For Parts\n'
+        '   • **Location** - Search by pickup location\n'
+        '3. Combine filters for precise results\n'
+        '4. Clear filters with the X button\n\n'
+        '**Smart Features:**\n'
+        '• Real-time search results\n'
+        '• Filter by multiple criteria\n'
+        '• See donor profiles and ratings\n'
+        '• View pickup addresses before requesting\n'
+        '• "Requested" badge shows items you already requested\n'
+        '• "Special Deal" badge for brand new selling items\n\n'
+        '💡 **Search Tips:**\n'
+        '• Use simple, specific keywords\n'
+        '• Try different variations (e.g., "phone" vs "mobile")\n'
+        '• Check category filters for better results\n'
+        '• Filter by condition to find quality items\n'
+        '• Look at donor ratings before requesting\n'
+        '• Check pickup address location\n\n'
+        '**Popular Searches:**\n'
+        '• Electronics: "laptop", "phone", "tablet", "headphones"\n'
+        '• Furniture: "chair", "table", "sofa", "desk"\n'
+        '• Books: "textbook", "novel", "study material"\n'
+        '• Clothing: "jacket", "shoes", "dress"';
   }
 
   String _getRequestHelp(String message) {
@@ -170,34 +376,115 @@ class ChatbotService {
       return '🙋 **How to Request an Item:**\n\n'
           '1. Browse items on **Home** or **Search**\n'
           '2. Find an item you need\n'
-          '3. Check the **pickup address**\n'
+          '3. Check these details first:\n'
+          '   • ✅ Item is available (not already requested)\n'
+          '   • 📍 Pickup address works for you\n'
+          '   • ⭐ Donor has good ratings\n'
+          '   • 📸 Photos match description\n'
           '4. Tap **"Request"** button\n'
-          '5. Wait for donor to approve\n\n'
-          '📬 **What happens next:**\n'
-          '• Donor receives your request\n'
-          '• They can approve or reject it\n'
-          '• You\'ll see status in "Incoming requests"\n'
-          '• Once approved, arrange pickup via chat or email';
+          '5. Confirm your request\n\n'
+          '📬 **What Happens Next:**\n'
+          '• ✉️ Donor receives notification\n'
+          '• ⏱️ They review your profile and request\n'
+          '• ✅ They approve or ❌ reject your request\n'
+          '• 📊 You see status in "My Requests"\n'
+          '• 💬 If approved, you can chat with donor\n'
+          '• 📧 Contact via email if needed\n'
+          '• 🤝 Arrange pickup time and location\n\n'
+          '⚠️ **Request Limit:**\n'
+          '• Maximum 4 requests per month\n'
+          '• Counter resets on 1st of each month\n'
+          '• Choose wisely!\n'
+          '• Check "My Requests" to see remaining quota\n\n'
+          '💡 **Best Practices:**\n'
+          '• Complete your profile before requesting\n'
+          '• Have a good profile photo\n'
+          '• Respond quickly to approved requests\n'
+          '• Be polite in communications\n'
+          '• Rate donors after successful pickup';
     }
 
     if (_contains(message, ['status', 'check', 'pending'])) {
       return '📊 **Check Request Status:**\n\n'
-          '1. Go to **Seeker Dashboard**\n'
+          '**Where to Check:**\n'
+          '1. Go to **Seeker Dashboard** (Profile tab)\n'
           '2. View "My requests" section\n'
-          '3. Status indicators:\n'
-          '   • 🟡 **Pending** - Waiting for donor\n'
-          '   • 🟢 **Approved** - Ready for pickup!\n'
-          '   • 🔴 **Rejected** - Try other items\n\n'
-          'You can message approved donors or view their contact info!';
+          '3. See all your requests with status\n\n'
+          '**Status Meanings:**\n'
+          '🟡 **Pending** - Waiting for donor decision\n'
+          '   • Donor hasn\'t responded yet\n'
+          '   • Usually takes 24-48 hours\n'
+          '   • Be patient!\n\n'
+          '🟢 **Approved** - Congratulations!\n'
+          '   • Donor accepted your request\n'
+          '   • Item is reserved for you\n'
+          '   • Contact donor to arrange pickup\n'
+          '   • Use chat or email button\n'
+          '   • Confirm pickup address and time\n\n'
+          '🔴 **Rejected** - Not this time\n'
+          '   • Donor chose another requester\n'
+          '   • Item no longer available\n'
+          '   • Try requesting other similar items\n'
+          '   • Don\'t be discouraged!\n\n'
+          '⚪ **Completed** - Mission accomplished!\n'
+          '   • You picked up the item\n'
+          '   • Please rate the donor\n'
+          '   • Share your experience\n\n'
+          '**Action Buttons:**\n'
+          '• 💬 **Chat** - Message donor (if approved)\n'
+          '• 📧 **Email** - Send email to donor\n'
+          '• 👤 **Profile** - View donor\'s profile\n'
+          '• ❌ **Cancel** - Cancel your request (if still pending)\n\n'
+          '💡 You can message approved donors to coordinate pickup!';
+    }
+    
+    if (_contains(message, ['limit', 'how many', 'monthly'])) {
+      return '📊 **Monthly Request Limit:**\n\n'
+          '**Current System:**\n'
+          '• Maximum: **4 requests per month**\n'
+          '• Resets: **1st of each month**\n'
+          '• Applies to: **All users equally**\n\n'
+          '**How It Works:**\n'
+          '• Each request counts immediately\n'
+          '• Even if rejected, it still counts\n'
+          '• Cancelled requests also count\n'
+          '• Approved requests count\n\n'
+          '**Check Your Usage:**\n'
+          '1. Go to Seeker Dashboard\n'
+          '2. See "X/4 requests used this month"\n'
+          '3. Or ask me: "What\'s my request limit?"\n\n'
+          '**Tips to Use Wisely:**\n'
+          '• Only request items you really need\n'
+          '• Check donor ratings first\n'
+          '• Verify pickup location before requesting\n'
+          '• Read item description carefully\n'
+          '• Don\'t spam multiple similar items\n\n'
+          '💡 Plan your requests carefully!';
     }
 
-    return '🙋 **Request Features:**\n\n'
+    return '🙋 **Request System Overview:**\n\n'
+        '**Key Features:**\n'
         '• Request any available item\n'
-        '• Track request status (pending/approved/rejected)\n'
+        '• Track status: Pending/Approved/Rejected/Completed\n'
+        '• Monthly limit: 4 requests per month\n'
         '• Contact donors after approval\n'
         '• View pickup addresses\n'
-        '• Cancel requests if needed\n\n'
-        'What do you need help with regarding requests?';
+        '• Cancel pending requests\n'
+        '• Rate donors after pickup\n\n'
+        '**Request Workflow:**\n'
+        '1️⃣ Browse items → Find what you need\n'
+        '2️⃣ Request → Send request to donor\n'
+        '3️⃣ Wait → Donor reviews (24-48h)\n'
+        '4️⃣ Approved → Arrange pickup\n'
+        '5️⃣ Pickup → Get the item\n'
+        '6️⃣ Rate → Give feedback\n\n'
+        '**Important Rules:**\n'
+        '• ⚠️ 4 requests max per month\n'
+        '• ⚠️ One request per item per user\n'
+        '• ⚠️ Cannot request your own items\n'
+        '• ⚠️ Must complete profile first\n'
+        '• ⚠️ Email must be verified\n\n'
+        'What specific help do you need with requests?';
   }
 
   String _getProfileHelp(String message) {
@@ -545,6 +832,298 @@ class ChatbotService {
     } catch (e) {
       return '❌ Sorry, I couldn\'t fetch recent items right now.\n\n'
           'Error: ${e.toString()}';
+    }
+  }
+  
+  // ==================== NEW ENHANCED METHODS ====================
+  
+  /// Get personalized information based on current user
+  Future<String> _getPersonalizedInfo(String message, User? user) async {
+    if (user == null) {
+      return '🔒 **Please Log In**\n\n'
+          'To view your personal information, donations, and requests, please log in to your account.';
+    }
+    
+    try {
+      if (_contains(message, ['my items', 'my donations', 'posted', 'donated'])) {
+        return await _getMyDonations(user);
+      }
+      
+      if (_contains(message, ['my requests', 'requested', 'i requested'])) {
+        return await _getMyRequests(user);
+      }
+      
+      if (_contains(message, ['my profile', 'my account', 'my info'])) {
+        final userDoc = await _firestore.collection('users').doc(user.uid).get();
+        final userData = userDoc.data();
+        final name = userData?['name'] ?? 'User';
+        final role = userData?['role'] ?? 'Not set';
+        final email = user.email ?? 'Not set';
+        
+        return '👤 **Your Profile**\n\n'
+            '**Name:** $name\n'
+            '**Email:** $email\n'
+            '**Role:** $role\n\n'
+            'Tap Profile → Edit to update your information!';
+      }
+      
+      return await _getMyDonations(user);
+    } catch (e) {
+      return '❌ Could not fetch your information. Please try again.';
+    }
+  }
+  
+  /// Get user's donated items
+  Future<String> _getMyDonations(User? user) async {
+    if (user == null) {
+      return '🔒 Please log in to view your donations.';
+    }
+    
+    try {
+      final itemsSnapshot = await _firestore
+          .collection('items')
+          .where('ownerId', isEqualTo: user.uid)
+          .orderBy('createdAt', descending: true)
+          .limit(5)
+          .get();
+      
+      if (itemsSnapshot.docs.isEmpty) {
+        return '📦 **No Donations Yet**\n\n'
+            'You haven\'t posted any items yet. Tap "Post Item" to donate something!';
+      }
+      
+      final totalItems = itemsSnapshot.docs.length;
+      final availableItems = itemsSnapshot.docs.where((doc) => doc.data()['available'] == true).length;
+      
+      String itemsList = '';
+      for (var doc in itemsSnapshot.docs.take(5)) {
+        final data = doc.data();
+        final title = data['title'] ?? 'Unknown';
+        final available = data['available'] == true ? '✅ Available' : '🔴 Requested';
+        itemsList += '\n• **$title** - $available';
+      }
+      
+      return '📦 **Your Donations**\n\n'
+          'Total items posted: $totalItems\n'
+          'Available: $availableItems\n'
+          '$itemsList\n\n'
+          'View all in Donor Dashboard!';
+    } catch (e) {
+      return '❌ Could not fetch your donations: ${e.toString()}';
+    }
+  }
+  
+  /// Get user's requests
+  Future<String> _getMyRequests(User? user) async {
+    if (user == null) {
+      return '🔒 Please log in to view your requests.';
+    }
+    
+    try {
+      final requestsSnapshot = await _firestore
+          .collection('requests')
+          .where('seekerId', isEqualTo: user.uid)
+          .orderBy('createdAt', descending: true)
+          .limit(5)
+          .get();
+      
+      if (requestsSnapshot.docs.isEmpty) {
+        return '🙋 **No Requests Yet**\n\n'
+            'You haven\'t requested any items yet. Browse available items and request what you need!';
+      }
+      
+      final pending = requestsSnapshot.docs.where((doc) => doc.data()['status'] == 'pending').length;
+      final approved = requestsSnapshot.docs.where((doc) => doc.data()['status'] == 'approved').length;
+      final rejected = requestsSnapshot.docs.where((doc) => doc.data()['status'] == 'rejected').length;
+      
+      return '🙋 **Your Requests**\n\n'
+          '🟡 Pending: $pending\n'
+          '🟢 Approved: $approved\n'
+          '🔴 Rejected: $rejected\n\n'
+          'View details in Seeker Dashboard!';
+    } catch (e) {
+      return '❌ Could not fetch your requests: ${e.toString()}';
+    }
+  }
+  
+  /// Get request limit information
+  Future<String> _getRequestLimitInfo(User? user) async {
+    if (user == null) {
+      return '🔒 Please log in to check your request limit.';
+    }
+    
+    try {
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      final userData = userDoc.data() ?? {};
+      final monthlyRequests = (userData['monthlyRequests'] as Map<String, dynamic>?) ?? {};
+      
+      final now = DateTime.now();
+      final monthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+      final currentCount = (monthlyRequests[monthKey] as int?) ?? 0;
+      const maxRequests = 4;
+      
+      final remaining = maxRequests - currentCount;
+      
+      return '📊 **Monthly Request Limit**\n\n'
+          '**Used:** $currentCount / $maxRequests requests\n'
+          '**Remaining:** $remaining requests\n\n'
+          '${remaining > 0 ? '✅ You can still request $remaining items this month!' : '❌ Monthly limit reached. Try again next month.'}\n\n'
+          '💡 The limit resets on the 1st of each month.';
+    } catch (e) {
+      return '❌ Could not fetch request limit: ${e.toString()}';
+    }
+  }
+  
+  /// Get available items
+  Future<String> _getAvailableItems(String message) async {
+    try {
+      final itemsSnapshot = await _firestore
+          .collection('items')
+          .where('available', isEqualTo: true)
+          .orderBy('createdAt', descending: true)
+          .limit(10)
+          .get();
+      
+      if (itemsSnapshot.docs.isEmpty) {
+        return '📭 **No Available Items**\n\n'
+            'There are no items available right now. Check back later!';
+      }
+      
+      String itemsList = '';
+      for (var doc in itemsSnapshot.docs.take(5)) {
+        final data = doc.data();
+        final title = data['title'] ?? 'Unknown';
+        final category = data['category'] ?? 'Other';
+        final condition = data['condition'] ?? 'Unknown';
+        itemsList += '\n• **$title**\n  Category: $category | Condition: $condition';
+      }
+      
+      return '✅ **Available Items (${itemsSnapshot.docs.length} total)**\n'
+          '$itemsList\n\n'
+          'Browse more on the Home screen!';
+    } catch (e) {
+      return '❌ Could not fetch available items: ${e.toString()}';
+    }
+  }
+  
+  /// Get items by category
+  Future<String> _getItemsByCategory(String message) async {
+    // Detect category from message
+    String? category;
+    final categoryMap = {
+      'electronics': 'Electronics',
+      'computers': 'Computers & Laptops',
+      'laptop': 'Computers & Laptops',
+      'mobile': 'Mobile Phones',
+      'phone': 'Mobile Phones',
+      'furniture': 'Home & Furniture',
+      'home': 'Home & Furniture',
+      'appliances': 'Appliances',
+      'books': 'Books & Education',
+      'education': 'Books & Education',
+      'sports': 'Sports & Fitness',
+      'fitness': 'Sports & Fitness',
+      'clothing': 'Clothing & Fashion',
+      'fashion': 'Clothing & Fashion',
+      'toys': 'Toys & Games',
+      'games': 'Toys & Games',
+      'kitchen': 'Kitchen & Dining',
+      'tools': 'Tools & Hardware',
+      'hardware': 'Tools & Hardware',
+      'garden': 'Garden & Outdoor',
+    };
+    
+    for (var entry in categoryMap.entries) {
+      if (message.contains(entry.key)) {
+        category = entry.value;
+        break;
+      }
+    }
+    
+    if (category == null) {
+      return '🔍 **Search by Category**\n\n'
+          'Available categories:\n'
+          '• Electronics\n• Computers & Laptops\n• Mobile Phones\n'
+          '• Home & Furniture\n• Appliances\n• Books & Education\n'
+          '• Sports & Fitness\n• Clothing & Fashion\n• Toys & Games\n'
+          '• Kitchen & Dining\n• Tools & Hardware\n• Garden & Outdoor\n\n'
+          'Try asking: "Show me electronics" or "Do you have any books?"';
+    }
+    
+    try {
+      final itemsSnapshot = await _firestore
+          .collection('items')
+          .where('category', isEqualTo: category)
+          .where('available', isEqualTo: true)
+          .orderBy('createdAt', descending: true)
+          .limit(5)
+          .get();
+      
+      if (itemsSnapshot.docs.isEmpty) {
+        return '📭 **No $category Items**\n\n'
+            'Sorry, there are no available items in this category right now. Try other categories!';
+      }
+      
+      String itemsList = '';
+      for (var doc in itemsSnapshot.docs) {
+        final data = doc.data();
+        final title = data['title'] ?? 'Unknown';
+        final condition = data['condition'] ?? 'Unknown';
+        itemsList += '\n• **$title** - $condition';
+      }
+      
+      return '📦 **$category (${itemsSnapshot.docs.length} available)**\n'
+          '$itemsList\n\n'
+          'Browse all items in the Search tab!';
+    } catch (e) {
+      return '❌ Could not fetch items: ${e.toString()}';
+    }
+  }
+  
+  /// Get items by condition
+  Future<String> _getItemsByCondition(String message) async {
+    String? condition;
+    if (message.contains('brand new')) condition = 'Brand New';
+    else if (message.contains('like new')) condition = 'Like New';
+    else if (message.contains('excellent')) condition = 'Excellent';
+    else if (message.contains('good')) condition = 'Good';
+    else if (message.contains('fair')) condition = 'Fair';
+    else if (message.contains('used')) condition = 'Used';
+    
+    if (condition == null) {
+      return '🌟 **Search by Condition**\n\n'
+          'Available conditions:\n'
+          '• Brand New\n• Like New\n• Excellent\n• Good\n• Fair\n• Used\n\n'
+          'Try asking: "Show me brand new items" or "What\'s in excellent condition?"';
+    }
+    
+    try {
+      final itemsSnapshot = await _firestore
+          .collection('items')
+          .where('condition', isEqualTo: condition)
+          .where('available', isEqualTo: true)
+          .orderBy('createdAt', descending: true)
+          .limit(5)
+          .get();
+      
+      if (itemsSnapshot.docs.isEmpty) {
+        return '📭 **No $condition Items**\n\n'
+            'Sorry, there are no available items in $condition condition right now.';
+      }
+      
+      String itemsList = '';
+      for (var doc in itemsSnapshot.docs) {
+        final data = doc.data();
+        final title = data['title'] ?? 'Unknown';
+        final category = data['category'] ?? 'Other';
+        itemsList += '\n• **$title** ($category)';
+      }
+      
+      return '🌟 **$condition Items (${itemsSnapshot.docs.length} available)**\n'
+          '$itemsList\n\n'
+          'Browse all items on the Home screen!';
+    } catch (e) {
+      return '❌ Could not fetch items: ${e.toString()}';
     }
   }
 }

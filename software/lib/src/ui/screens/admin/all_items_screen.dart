@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../profile/public_profile_screen.dart';
+import '../../widgets/chatbot/chatbot_wrapper.dart';
 
 class AllItemsScreen extends StatefulWidget {
   const AllItemsScreen({super.key});
@@ -16,14 +17,16 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('All Items'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('All Items'),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
+        body: SafeArea(
+        child: Column(
+          children: [
           // Search and Filter
           Container(
             padding: const EdgeInsets.all(16),
@@ -122,6 +125,8 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
             ),
           ),
         ],
+        ),
+        ),
       ),
     );
   }

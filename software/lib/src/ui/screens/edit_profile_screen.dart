@@ -257,93 +257,238 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final avatarImage = _avatarProvider();
+    final theme = Theme.of(context);
 
     return ChatbotWrapper(
       child: Scaffold(
-        appBar: AppBar(title: const Text('Edit Profile')),
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: const Text('Edit Profile'),
+          elevation: 0,
+          centerTitle: true,
+        ),
 
-      body: _isLoading
+      body: SafeArea(
+        child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            GestureDetector(
-              onTap: pickImage,
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: avatarImage,
-                child: avatarImage == null
-                    ? const Icon(Icons.add_a_photo, size: 50)
-                    : null,
+            // Profile Photo Section
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey[200]!),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: theme.colorScheme.primaryContainer,
+                          backgroundImage: avatarImage,
+                          child: avatarImage == null
+                              ? Icon(Icons.person, size: 60, color: theme.colorScheme.primary)
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Material(
+                            color: theme.colorScheme.primary,
+                            borderRadius: BorderRadius.circular(20),
+                            child: InkWell(
+                              onTap: pickImage,
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Tap camera icon to change photo',
+                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
 
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
-            ),
-            const SizedBox(height: 8),
-
-            TextField(
-              controller: _phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Phone Number *',
-                hintText: 'Enter your contact number',
-                prefixIcon: Icon(Icons.phone),
+            // Profile Information Section
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey[200]!),
               ),
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 8),
-
-            TextField(
-              controller: _bioController,
-              decoration: const InputDecoration(labelText: 'Bio'),
-              maxLines: 3,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Profile Information',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                        prefixIcon: const Icon(Icons.person_outline),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _phoneController,
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                        hintText: 'Enter your contact number',
+                        prefixIcon: const Icon(Icons.phone_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _bioController,
+                      decoration: InputDecoration(
+                        labelText: 'Bio',
+                        hintText: 'Tell us about yourself',
+                        prefixIcon: const Icon(Icons.edit_note_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 4,
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 
-            const Divider(),
-            const SizedBox(height: 8),
-            const Text(
-              'Change Password',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            // Change Password Section
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey[200]!),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.lock_outline, color: theme.colorScheme.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Change Password',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Leave blank to keep current password',
+                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _oldPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Current Password',
+                        prefixIcon: const Icon(Icons.lock_open_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _newPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'New Password',
+                        prefixIcon: const Icon(Icons.lock_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _confirmPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm New Password',
+                        prefixIcon: const Icon(Icons.lock_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                      obscureText: true,
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
 
-            TextField(
-              controller: _oldPasswordController,
-              decoration:
-              const InputDecoration(labelText: 'Old Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 8),
-
-            TextField(
-              controller: _newPasswordController,
-              decoration:
-              const InputDecoration(labelText: 'New Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 8),
-
-            TextField(
-              controller: _confirmPasswordController,
-              decoration:
-              const InputDecoration(labelText: 'Confirm New Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-
-            ElevatedButton(
+            // Save Button
+            FilledButton.icon(
               onPressed: updateProfile,
-              child: const Text('Save Changes'),
+              icon: const Icon(Icons.save_outlined),
+              label: const Text('Save Changes'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
+        ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 4),
       ),
     );
   }

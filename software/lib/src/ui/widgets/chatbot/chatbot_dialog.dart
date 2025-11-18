@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'chatbot_service.dart';
+import 'hybrid_chatbot_service.dart';
 
-/// Main chatbot dialog - full-featured AI assistant
+/// Main chatbot dialog - full-featured AI assistant with Hybrid AI
 class ChatbotDialog extends StatefulWidget {
   const ChatbotDialog({super.key});
 
@@ -14,7 +14,7 @@ class _ChatbotDialogState extends State<ChatbotDialog>
     with SingleTickerProviderStateMixin {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
-  final _chatbotService = ChatbotService();
+  late final HybridChatbotService _chatbotService;
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
   late AnimationController _slideController;
@@ -23,6 +23,15 @@ class _ChatbotDialogState extends State<ChatbotDialog>
   @override
   void initState() {
     super.initState();
+    
+    // Initialize hybrid chatbot service
+    _chatbotService = HybridChatbotService();
+    
+    // OPTIONAL: Initialize Gemini AI
+    // Get your free API key from https://makersuite.google.com/app/apikey
+    // Uncomment the line below and replace with your actual API key
+    // _chatbotService.initializeGemini('YOUR_GEMINI_API_KEY_HERE');
+    
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -42,9 +51,15 @@ class _ChatbotDialogState extends State<ChatbotDialog>
     final user = FirebaseAuth.instance.currentUser;
     final name = user?.displayName?.split(' ').first ?? 'there';
     
+    final hour = DateTime.now().hour;
+    String greeting = 'Hi';
+    if (hour < 12) greeting = 'Good morning';
+    else if (hour < 17) greeting = 'Good afternoon';
+    else if (hour < 21) greeting = 'Good evening';
+    
     setState(() {
       _messages.add(ChatMessage(
-        text: 'Hi $name! 👋\nHow can I help you today?',
+        text: '$greeting $name! 👋\n\nI\'m your enhanced AI assistant powered by smart fuzzy matching${_chatbotService.isAiEnabled ? ' and Google Gemini AI' : ''}.\n\nHow can I help you today?',
         isUser: false,
         timestamp: DateTime.now(),
       ));
@@ -64,12 +79,14 @@ class _ChatbotDialogState extends State<ChatbotDialog>
     if (text.isEmpty) return;
 
     // Add user message
+    final userMessage = ChatMessage(
+      text: text,
+      isUser: true,
+      timestamp: DateTime.now(),
+    );
+    
     setState(() {
-      _messages.add(ChatMessage(
-        text: text,
-        isUser: true,
-        timestamp: DateTime.now(),
-      ));
+      _messages.add(userMessage);
       _isTyping = true;
     });
 
@@ -86,6 +103,8 @@ class _ChatbotDialogState extends State<ChatbotDialog>
             text: response,
             isUser: false,
             timestamp: DateTime.now(),
+            userQuestion: text, // Store for feedback
+            aiResponse: response, // Store for feedback
           ));
           _isTyping = false;
         });
@@ -101,6 +120,32 @@ class _ChatbotDialogState extends State<ChatbotDialog>
           ));
           _isTyping = false;
         });
+      }
+    }
+  }
+  
+  Future<void> _handleFeedback(ChatMessage message, bool helpful) async {
+    if (message.userQuestion != null && message.aiResponse != null) {
+      await _chatbotService.logFeedback(
+        message.userQuestion!,
+        message.aiResponse!,
+        helpful,
+      );
+      
+      // Update message to mark feedback given
+      setState(() {
+        message.feedbackGiven = true;
+      });
+      
+      // Show thank you message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(helpful ? '😊 Thank you for the positive feedback!' : '📝 Thanks! We\'ll improve our responses.'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: helpful ? Colors.green : Colors.orange,
+          ),
+        );
       }
     }
   }
@@ -229,9 +274,13 @@ class _ChatbotDialogState extends State<ChatbotDialog>
 
   Widget _buildQuickActions() {
     final actions = [
+      {'icon': Icons.inventory, 'text': 'Show me recent items'},
       {'icon': Icons.help_outline, 'text': 'How do I donate an item?'},
-      {'icon': Icons.search, 'text': 'How do I search for items?'},
-      {'icon': Icons.star, 'text': 'How does the rating system work?'},
+      {'icon': Icons.chat, 'text': 'How can I contact with another user?'},
+      {'icon': Icons.phone, 'text': 'What is my contact number?'},
+      {'icon': Icons.star, 'text': 'Show my rating'},
+      {'icon': Icons.my_library_books, 'text': 'Show my donations'},
+      {'icon': Icons.request_page, 'text': 'Show my requests'},
       {'icon': Icons.contact_support, 'text': 'I need technical support'},
     ];
 
@@ -302,43 +351,107 @@ class _ChatbotDialogState extends State<ChatbotDialog>
   }
 
   Widget _buildMessageBubble(ChatMessage message) {
-    return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
-        ),
-        decoration: BoxDecoration(
-          gradient: message.isUser
-              ? const LinearGradient(
-                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                )
-              : null,
-          color: message.isUser ? null : Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(message.isUser ? 16 : 4),
-            bottomRight: Radius.circular(message.isUser ? 4 : 16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+    return Column(
+      crossAxisAlignment: message.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.7,
             ),
-          ],
-        ),
-        child: Text(
-          message.text,
-          style: TextStyle(
-            color: message.isUser ? Colors.white : Colors.black87,
-            fontSize: 14,
+            decoration: BoxDecoration(
+              gradient: message.isUser
+                  ? const LinearGradient(
+                      colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    )
+                  : null,
+              color: message.isUser ? null : Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(message.isUser ? 16 : 4),
+                bottomRight: Radius.circular(message.isUser ? 4 : 16),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              message.text,
+              style: TextStyle(
+                color: message.isUser ? Colors.white : Colors.black87,
+                fontSize: 14,
+              ),
+            ),
           ),
         ),
-      ),
+        // Add feedback buttons for AI responses
+        if (!message.isUser && message.userQuestion != null && !message.feedbackGiven)
+          Padding(
+            padding: const EdgeInsets.only(left: 8, bottom: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Was this helpful?', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => _handleFeedback(message, true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.thumb_up_outlined, size: 12, color: Colors.green),
+                        SizedBox(width: 4),
+                        Text('Yes', style: TextStyle(fontSize: 11, color: Colors.green)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: () => _handleFeedback(message, false),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.thumb_down_outlined, size: 12, color: Colors.orange),
+                        SizedBox(width: 4),
+                        Text('No', style: TextStyle(fontSize: 11, color: Colors.orange)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (!message.isUser && message.feedbackGiven)
+          const Padding(
+            padding: EdgeInsets.only(left: 8, bottom: 12),
+            child: Text(
+              '✓ Feedback received',
+              style: TextStyle(fontSize: 11, color: Colors.grey, fontStyle: FontStyle.italic),
+            ),
+          ),
+      ],
     );
   }
 
@@ -457,10 +570,17 @@ class ChatMessage {
   final String text;
   final bool isUser;
   final DateTime timestamp;
+  final String? userQuestion;
+  final String? aiResponse;
+  bool feedbackGiven;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
+    this.userQuestion,
+    this.aiResponse,
+    this.feedbackGiven = false,
   });
 }
+

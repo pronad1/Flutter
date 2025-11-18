@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/app_bottom_nav.dart';
 import '../widgets/chatbot/chatbot_wrapper.dart';
 import '../../services/item_service.dart';
 import '../../models/item.dart';
@@ -70,7 +71,8 @@ class _SeekerHistoryScreenState extends State<SeekerHistoryScreen> {
           title: const Text('My Requested Items'),
           elevation: 0,
         ),
-        body: _uid == null
+        body: SafeArea(
+          child: _uid == null
             ? const Center(child: Text('Please sign in.'))
             : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: _myRequestsStream(),
@@ -355,6 +357,8 @@ class _SeekerHistoryScreenState extends State<SeekerHistoryScreen> {
                   );
                 },
               ),
+        ),
+        bottomNavigationBar: const AppBottomNav(currentIndex: 2),
       ),
     );
   }

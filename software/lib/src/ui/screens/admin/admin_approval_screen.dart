@@ -149,7 +149,8 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> with SingleTi
             ),
           ),
         ),
-        body: Column(
+        body: SafeArea(
+          child: Column(
           children: [
             // Statistics Overview Card
             StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -550,6 +551,7 @@ class _AdminApprovalScreenState extends State<AdminApprovalScreen> with SingleTi
               ),
             ),
           ],
+        ),
         ),
         bottomNavigationBar: const AppBottomNav(currentIndex: 1),
       ),

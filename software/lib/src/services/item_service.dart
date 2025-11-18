@@ -23,9 +23,16 @@ class ItemService {
     String? category,
     String? condition,
     String? pickupAddress,
+    double? price,
+    bool isSelling = false,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not logged in');
+    
+    // Validate price if selling
+    if (isSelling && (price == null || price <= 0)) {
+      throw Exception('Price must be greater than 0 for selling items');
+    }
 
     final ref = _db.collection('items').doc();
     String? imageUrl;
@@ -40,6 +47,12 @@ class ItemService {
       imageUrl = up.publicUrl;
       imagePath = up.path;
     }
+    
+    // Determine if item is a special deal (Brand New + Selling + Has Price)
+    final isSpecialDeal = isSelling && 
+                          condition == 'Brand New' && 
+                          price != null && 
+                          price > 0;
 
     final item = Item(
       id: ref.id,
@@ -52,7 +65,10 @@ class ItemService {
       condition: condition,
       pickupAddress: pickupAddress,
       available: true,
-      createdAt: Timestamp.now(), // kept for your model; we'll also write serverTimestamp below
+      createdAt: Timestamp.now(),
+      price: price,
+      isSelling: isSelling,
+      isSpecialDeal: isSpecialDeal,
     ).toMap()
       ..['titleLower'] = title.trim().toLowerCase();
 
@@ -87,9 +103,16 @@ class ItemService {
     String? pickupAddress,
     bool? available,
     XFile? newImageFile,
+    double? price,
+    bool? isSelling,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not logged in');
+    
+    // Validate price if selling
+    if (isSelling == true && price != null && price <= 0) {
+      throw Exception('Price must be greater than 0 for selling items');
+    }
 
     final ref = _db.collection('items').doc(itemId);
     final snap = await ref.get();
@@ -130,8 +153,23 @@ class ItemService {
       if (available != null) 'available': available,
       if (newImageFile != null) 'imageUrl': imageUrl,
       if (newImageFile != null) 'imagePath': imagePath,
+      if (price != null) 'price': price,
+      if (isSelling != null) 'isSelling': isSelling,
       'updatedAt': FieldValue.serverTimestamp(),
     };
+    
+    // Update special deal status if condition or price changed
+    if (condition != null || price != null || isSelling != null) {
+      final currentCondition = condition ?? d['condition'];
+      final currentPrice = price ?? (d['price'] as num?)?.toDouble();
+      final currentIsSelling = isSelling ?? ((d['isSelling'] as bool?) ?? false);
+      
+      final isSpecialDeal = currentIsSelling && 
+                            currentCondition == 'Brand New' && 
+                            currentPrice != null && 
+                            currentPrice > 0;
+      update['isSpecialDeal'] = isSpecialDeal;
+    }
 
     await ref.update(update);
   }

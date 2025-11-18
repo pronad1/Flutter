@@ -258,6 +258,34 @@ service cloud.firestore {
     }
 
     // ========================================================================
+    // COLLECTION: chatbot_feedback (CHATBOT IMPROVEMENT)
+    // ========================================================================
+    // Purpose: Store user feedback on chatbot responses for continuous improvement
+    // Fields: question, response, helpful (boolean), timestamp
+    // 
+    // Created by: enhanced_chatbot_service.dart logFeedback()
+    // Read by: Admin dashboard (future analytics)
+    // 
+    // Security:
+    //   ✅ Create: Any authenticated user (to log feedback)
+    //   ✅ Read: Admin only (for analytics)
+    //   ✅ Update/Delete: Blocked (feedback is immutable)
+    //
+    match /chatbot_feedback/{feedbackId} {
+      // Any authenticated user can create feedback
+      allow create: if isSignedIn()
+        && request.resource.data.question is string
+        && request.resource.data.response is string
+        && request.resource.data.helpful is bool;
+
+      // Only admins can read feedback (for analytics)
+      allow read: if isAdmin();
+
+      // Feedback is immutable (no updates or deletes)
+      allow update, delete: if false;
+    }
+
+    // ========================================================================
     // DEFAULT DENY ALL
     // ========================================================================
     // Deny access to any other collections/documents not explicitly allowed above

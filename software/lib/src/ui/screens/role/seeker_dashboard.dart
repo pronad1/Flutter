@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/chatbot/chatbot_wrapper.dart';
 import '../../../services/item_service.dart';
 import '../profile/public_profile_screen.dart';
 
@@ -38,14 +39,16 @@ class _SeekerDashboardState extends State<SeekerDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Seeker Dashboard')),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: _myRequests(),
-          builder: (context, snap) {
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Seeker Dashboard')),
+        bottomNavigationBar: const AppBottomNav(currentIndex: 1),
+        body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: _myRequests(),
+            builder: (context, snap) {
             if (snap.hasError) return Text(snap.error.toString(), style: const TextStyle(color: Colors.red));
             if (!snap.hasData) return const LinearProgressIndicator();
 
@@ -157,6 +160,8 @@ class _SeekerDashboardState extends State<SeekerDashboard> {
               },
             );
           },
+        ),
+        ),
         ),
       ),
     );

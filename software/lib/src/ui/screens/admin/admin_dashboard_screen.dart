@@ -2,20 +2,23 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/chatbot/chatbot_wrapper.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Dashboard'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-      ),
-      body: StreamBuilder<QuerySnapshot>(
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Admin Dashboard'),
+          backgroundColor: Colors.deepPurple,
+          foregroundColor: Colors.white,
+          automaticallyImplyLeading: false,
+        ),
+        body: SafeArea(
+        child: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('users').snapshots(),
         builder: (context, userSnapshot) {
           if (!userSnapshot.hasData) {
@@ -191,8 +194,10 @@ class AdminDashboardScreen extends StatelessWidget {
             },
           );
         },
+        ),
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
+      ),
     );
   }
 

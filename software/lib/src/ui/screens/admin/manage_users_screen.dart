@@ -1,6 +1,7 @@
 // lib/src/ui/screens/admin/manage_users_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../widgets/chatbot/chatbot_wrapper.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -16,14 +17,16 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Manage Users'),
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Manage Users'),
+          backgroundColor: Colors.orange,
+          foregroundColor: Colors.white,
+        ),
+        body: SafeArea(
+        child: Column(
+          children: [
           // Search and Filters
           Container(
             padding: const EdgeInsets.all(16),
@@ -147,6 +150,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             ),
           ),
         ],
+        ),
+        ),
       ),
     );
   }
@@ -389,3 +394,4 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 }
+
