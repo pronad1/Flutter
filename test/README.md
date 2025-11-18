@@ -442,3 +442,10 @@ The ReuseHub AI Assistant is now a **fully functional, intelligent helper** that
 8. **Browse available items** - "What's available?"
 
 **The AI is now a true assistant that knows everything about your ReuseHub app!** 🚀
+
+
+# 1. Build
+flutter build web
+
+# 2. Deploy
+firebase deploy --only hosting
