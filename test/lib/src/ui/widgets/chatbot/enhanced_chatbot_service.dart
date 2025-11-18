@@ -13,18 +13,20 @@ class EnhancedChatbotService {
   
   // Synonyms dictionary for better understanding (protected for subclass)
   final Map<String, List<String>> synonyms = {
-    'donate': ['donate', 'donation', 'donating', 'give', 'give away', 'contribute', 'share', 'post'],
-    'request': ['request', 'ask for', 'need', 'want', 'looking for', 'seeking', 'require'],
-    'search': ['search', 'find', 'look for', 'browse', 'explore', 'discover'],
+    'donate': ['donate', 'donation', 'donating', 'dontion', 'give', 'give away', 'contribute', 'share', 'post'],
+    'request': ['request', 'ask for', 'need', 'want', 'looking for', 'seeking', 'require', 'requist'],
+    'search': ['search', 'find', 'look for', 'browse', 'explore', 'discover', 'serch'],
     'help': ['help', 'assist', 'support', 'guide', 'tutorial', 'how'],
-    'problem': ['problem', 'issue', 'error', 'bug', 'not working', 'broken', 'fail'],
-    'profile': ['profile', 'account', 'settings', 'info', 'information'],
-    'rating': ['rating', 'review', 'feedback', 'rate', 'star'],
-    'item': ['item', 'product', 'thing', 'stuff', 'goods'],
-    'available': ['available', 'free', 'open', 'accessible', 'ready'],
-    'category': ['category', 'type', 'kind', 'classification'],
-    'edit': ['edit', 'change', 'modify', 'update', 'alter'],
-    'delete': ['delete', 'remove', 'cancel', 'erase'],
+    'problem': ['problem', 'issue', 'error', 'bug', 'not working', 'broken', 'fail', 'problm'],
+    'profile': ['profile', 'account', 'settings', 'info', 'information', 'profil'],
+    'rating': ['rating', 'review', 'feedback', 'rate', 'star', 'ratig'],
+    'item': ['item', 'product', 'thing', 'stuff', 'goods', 'itm'],
+    'available': ['available', 'free', 'open', 'accessible', 'ready', 'availble'],
+    'category': ['category', 'type', 'kind', 'classification', 'categry'],
+    'edit': ['edit', 'change', 'modify', 'update', 'alter', 'edt'],
+    'delete': ['delete', 'remove', 'cancel', 'erase', 'delet'],
+    'contact': ['contact', 'message', 'chat', 'talk', 'reach', 'communicate', 'contact', 'mesage'],
+    'number': ['number', 'mobile', 'phone', 'contact number', 'phone number', 'numer'],
   };
   
   Future<String> getResponse(String userMessage) async {
@@ -73,6 +75,9 @@ class EnhancedChatbotService {
       case 'rating':
         lastTopic = 'rating';
         return getRatingHelp();
+      case 'contact':
+        lastTopic = 'contact';
+        return getContactHelp(message);
       case 'problem':
         lastTopic = 'problem';
         return getTechnicalHelp(message);
@@ -158,6 +163,15 @@ class EnhancedChatbotService {
     // Rating related
     if (fuzzyContains(message, 'rating')) {
       return 'rating';
+    }
+    
+    // Contact/Messaging related
+    if (fuzzyContains(message, 'contact') || 
+        message.contains('message') || 
+        message.contains('chat') ||
+        message.contains('talk to') ||
+        message.contains('reach')) {
+      return 'contact';
     }
     
     return 'unknown';
@@ -358,6 +372,53 @@ class EnhancedChatbotService {
         'Keep your profile updated for better interactions! 😊';
   }
   
+  String getContactHelp(String message) {
+    // Check if asking about contacting another user
+    if (message.contains('another') || message.contains('user') || 
+        message.contains('donor') || message.contains('seeker') ||
+        message.contains('someone') || message.contains('other')) {
+      return '💬 **How to Contact Other Users:**\n\n'
+          '**Chat with Donors:**\n'
+          '1. Find an item you want\n'
+          '2. Tap on the item\n'
+          '3. Tap "Request" button\n'
+          '4. After donor approves → Chat unlocked!\n'
+          '5. Go to **Chat** tab → Start messaging\n\n'
+          '**Chat with Seekers (as Donor):**\n'
+          '1. Go to Profile → Donor Dashboard\n'
+          '2. View your requests\n'
+          '3. Approve a request\n'
+          '4. Go to **Chat** tab\n'
+          '5. Start conversation with seeker\n\n'
+          '**Chat Features:**\n'
+          '✅ Send text messages\n'
+          '✅ Real-time notifications\n'
+          '✅ Chat history saved\n'
+          '✅ Arrange pickup details\n\n'
+          '⚠️ **Important:** Chat only available after request approval!\n\n'
+          '🔒 **Privacy:** Contact details are private - use in-app chat only!';
+    }
+    
+    // General contact/messaging help
+    return '💬 **Messaging System:**\n\n'
+        '**How it Works:**\n'
+        '1. Request an item (seeker)\n'
+        '2. Owner approves request\n'
+        '3. Chat unlocks automatically\n'
+        '4. Both parties can message\n\n'
+        '**Access Chats:**\n'
+        'Go to **Chat** tab (bottom navigation)\n\n'
+        '**What to Discuss:**\n'
+        '• Pickup location & time\n'
+        '• Item condition details\n'
+        '• Coordination questions\n\n'
+        '**Tips:**\n'
+        '✅ Be polite and respectful\n'
+        '✅ Respond promptly\n'
+        '✅ Clear communication\n\n'
+        'Ask "how to contact another user" for detailed steps! 💬';
+  }
+  
   String getRatingHelp() {
     return '⭐ **Rating System Guide:**\n\n'
         '**How to Rate Someone:**\n'
@@ -462,11 +523,11 @@ class EnhancedChatbotService {
   }
   
   Future<String> handleDataRequest(String message, User? user) async {
-    if (message.contains('my donation') || message.contains('my item')) {
+    if (message.contains('my donation') || message.contains('my item') || message.contains('my dontion')) {
       return await getMyDonations(user);
     }
     
-    if (message.contains('my request')) {
+    if (message.contains('my request') || message.contains('my requist')) {
       return await getMyRequests(user);
     }
     
@@ -475,6 +536,14 @@ class EnhancedChatbotService {
         message.contains('profile rating') || message.contains('my review') ||
         message.contains('my score')) {
       return await getMyRating(user);
+    }
+    
+    // Handle contact number queries (with typo tolerance)
+    if (message.contains('my contact') || message.contains('my number') || 
+        message.contains('my phone') || message.contains('my mobile') ||
+        message.contains('contact number') || message.contains('phone number') ||
+        message.contains('my numer') || message.contains('contact number')) {
+      return await getMyContactNumber(user);
     }
     
     if (message.contains('request limit') || message.contains('quota')) {
@@ -699,9 +768,10 @@ class EnhancedChatbotService {
         '❓ "How to request items?"\n'
         '❓ "My donations"\n'
         '❓ "My rating"\n'
+        '❓ "My contact number"\n'
+        '❓ "How to contact another user?"\n'
         '❓ "How many items?"\n'
-        '❓ "Technical support"\n'
-        '❓ "How does rating work?"\n\n'
+        '❓ "Technical support"\n\n'
         'Or tap the **quick action buttons** below! 👇\n\n'
         '💡 Tip: Try being more specific!';
   }
@@ -718,6 +788,49 @@ class EnhancedChatbotService {
       });
     } catch (e) {
       print('Error logging feedback: $e');
+    }
+  }
+  
+  // Get user's contact number from their profile
+  Future<String> getMyContactNumber(User? user) async {
+    if (user == null) return '🔒 Please log in to view your contact number.';
+    
+    try {
+      final userDoc = await firestore.collection('users').doc(user.uid).get();
+      
+      if (!userDoc.exists) {
+        return '❌ **Profile not found.**\n\n'
+            'Please update your profile first:\n'
+            '1. Go to **Profile** tab\n'
+            '2. Tap edit icon\n'
+            '3. Add your mobile number\n'
+            '4. Save changes';
+      }
+      
+      final data = userDoc.data();
+      final mobile = data?['mobile'] ?? '';
+      final name = data?['name'] ?? 'User';
+      final email = data?['email'] ?? user.email ?? '';
+      
+      if (mobile.isEmpty) {
+        return '📱 **No contact number on file.**\n\n'
+            'Add your mobile number:\n'
+            '1. Go to **Profile** tab\n'
+            '2. Tap edit icon (✏️)\n'
+            '3. Enter your mobile number\n'
+            '4. Tap "Save Changes"\n\n'
+            '💡 This helps donors/seekers coordinate pickups!';
+      }
+      
+      return '📱 **Your Contact Information:**\n\n'
+          '**Name:** $name\n'
+          '**Mobile:** $mobile\n'
+          '**Email:** $email\n\n'
+          '✏️ **Update Info:**\n'
+          'Profile tab → Edit icon → Update details\n\n'
+          '🔒 **Privacy:** Your number is private and only visible to you!';
+    } catch (e) {
+      return '❌ Error fetching contact info. Please try again.';
     }
   }
   

@@ -276,11 +276,11 @@ class _ChatbotDialogState extends State<ChatbotDialog>
     final actions = [
       {'icon': Icons.inventory, 'text': 'Show me recent items'},
       {'icon': Icons.help_outline, 'text': 'How do I donate an item?'},
-      {'icon': Icons.search, 'text': 'What electronics are available?'},
-      {'icon': Icons.request_page, 'text': 'Check my request limit'},
-      {'icon': Icons.bar_chart, 'text': 'How many items are posted?'},
-      {'icon': Icons.star, 'text': 'How does the rating system work?'},
+      {'icon': Icons.chat, 'text': 'How can I contact with another user?'},
+      {'icon': Icons.phone, 'text': 'What is my contact number?'},
+      {'icon': Icons.star, 'text': 'Show my rating'},
       {'icon': Icons.my_library_books, 'text': 'Show my donations'},
+      {'icon': Icons.request_page, 'text': 'Show my requests'},
       {'icon': Icons.contact_support, 'text': 'I need technical support'},
     ];
 
