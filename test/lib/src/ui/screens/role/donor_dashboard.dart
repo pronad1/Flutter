@@ -290,13 +290,20 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                           future: _itemService.getUserName(oid),
                                           builder: (ctx2, fb2) {
                                             final n = (fb2.hasData && fb2.data!.trim().isNotEmpty && fb2.data! != '(No name)') ? fb2.data! : displayName;
-                                            return Text('Donor: $n · Posted: ${_itemService.formatTimestamp(m['createdAt'])}', style: TextStyle(color: Colors.grey[700], fontSize: 12));
+                                            return Text(
+                                              'Donor: $n · Posted: ${_itemService.formatTimestamp(m['createdAt'])}',
+                                              style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            );
                                           },
                                         )
                                       else
                                         Text(
                                           'Donor: $displayName · Posted: ${_itemService.formatTimestamp(m['createdAt'])}',
                                           style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       // Show seeker name if item has been received
                                       FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -324,21 +331,25 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                                 child: Row(
                                                   children: [
                                                     Text('Received by: ', style: TextStyle(color: Colors.blueGrey[700], fontSize: 12, fontStyle: FontStyle.italic)),
-                                                    InkWell(
-                                                      onTap: () => Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (_) => PublicProfileScreen(userId: seekerId),
+                                                    Flexible(
+                                                      child: InkWell(
+                                                        onTap: () => Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (_) => PublicProfileScreen(userId: seekerId),
+                                                          ),
                                                         ),
-                                                      ),
-                                                      child: Text(
-                                                        seekerName,
-                                                        style: TextStyle(
-                                                          color: Colors.blue[700],
-                                                          fontSize: 12,
-                                                          fontStyle: FontStyle.italic,
-                                                          decoration: TextDecoration.underline,
-                                                          fontWeight: FontWeight.w600,
+                                                        child: Text(
+                                                          seekerName,
+                                                          style: TextStyle(
+                                                            color: Colors.blue[700],
+                                                            fontSize: 12,
+                                                            fontStyle: FontStyle.italic,
+                                                            decoration: TextDecoration.underline,
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
                                                         ),
                                                       ),
                                                     ),
@@ -351,43 +362,49 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                       ),
                                       Row(
                                         children: [
-                                          FutureBuilder<bool>(
-                                            future: _itemService.hasApprovedRequestsForItem(id),
-                                            builder: (ctx, snap) {
-                                              final hasApproved = snap.data == true;
-                                              final isAvail = !hasApproved && available;
-                                              return Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                decoration: BoxDecoration(
-                                                  color: isAvail ? Colors.green.shade50 : Colors.grey.shade100,
-                                                  borderRadius: BorderRadius.circular(20),
-                                                  border: Border.all(
-                                                    color: isAvail ? Colors.green.shade200 : Colors.grey.shade300,
-                                                  ),
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Icon(
-                                                      isAvail ? Icons.check_circle : Icons.cancel,
-                                                      size: 16,
-                                                      color: isAvail ? Colors.green.shade700 : Colors.grey.shade600,
+                                          Flexible(
+                                            child: FutureBuilder<bool>(
+                                              future: _itemService.hasApprovedRequestsForItem(id),
+                                              builder: (ctx, snap) {
+                                                final hasApproved = snap.data == true;
+                                                final isAvail = !hasApproved && available;
+                                                return Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                  decoration: BoxDecoration(
+                                                    color: isAvail ? Colors.green.shade50 : Colors.grey.shade100,
+                                                    borderRadius: BorderRadius.circular(20),
+                                                    border: Border.all(
+                                                      color: isAvail ? Colors.green.shade200 : Colors.grey.shade300,
                                                     ),
-                                                    const SizedBox(width: 6),
-                                                    Text(
-                                                      isAvail ? 'Available' : 'Unavailable',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w600,
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        isAvail ? Icons.check_circle : Icons.cancel,
+                                                        size: 16,
                                                         color: isAvail ? Colors.green.shade700 : Colors.grey.shade600,
                                                       ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            },
+                                                      const SizedBox(width: 6),
+                                                      Flexible(
+                                                        child: Text(
+                                                          isAvail ? 'Available' : 'Unavailable',
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            fontWeight: FontWeight.w600,
+                                                            color: isAvail ? Colors.green.shade700 : Colors.grey.shade600,
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
                                           ),
-                                          const Spacer(),
+                                          const SizedBox(width: 8),
                                           IconButton(
                                             tooltip: 'Edit item',
                                             onPressed: () {
@@ -397,9 +414,12 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                                 arguments: id,
                                               );
                                             },
-                                            icon: Icon(Icons.edit_outlined, color: theme.colorScheme.primary),
+                                            icon: Icon(Icons.edit_outlined, color: theme.colorScheme.primary, size: 20),
                                             style: IconButton.styleFrom(
                                               backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                                              padding: const EdgeInsets.all(8),
+                                              minimumSize: const Size(36, 36),
+                                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                             ),
                                           )
                                         ],
@@ -508,20 +528,24 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                       return Row(
                                         children: [
                                           Text('From: ', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                                          InkWell(
-                                            onTap: () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => PublicProfileScreen(userId: seekerId),
+                                          Flexible(
+                                            child: InkWell(
+                                              onTap: () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => PublicProfileScreen(userId: seekerId),
+                                                ),
                                               ),
-                                            ),
-                                            child: Text(
-                                              seekerName,
-                                              style: TextStyle(
-                                                color: Colors.blue[700],
-                                                fontSize: 12,
-                                                decoration: TextDecoration.underline,
-                                                fontWeight: FontWeight.w600,
+                                              child: Text(
+                                                seekerName,
+                                                style: TextStyle(
+                                                  color: Colors.blue[700],
+                                                  fontSize: 12,
+                                                  decoration: TextDecoration.underline,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                           ),
@@ -700,15 +724,26 @@ class _RequestActions extends StatelessWidget {
   Widget build(BuildContext context) {
     if (status == 'pending') {
       return Wrap(
-        spacing: 4,
+        spacing: 2,
+        runSpacing: 2,
         children: [
           TextButton(
             onPressed: onApprove,
-            child: const Text('Approve'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Approve', style: TextStyle(fontSize: 12)),
           ),
           TextButton(
             onPressed: onReject,
-            child: const Text('Reject'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Reject', style: TextStyle(fontSize: 12)),
           ),
         ],
       );
@@ -716,7 +751,12 @@ class _RequestActions extends StatelessWidget {
     if (status == 'approved') {
       return TextButton(
         onPressed: onComplete,
-        child: const Text('Complete'),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          minimumSize: const Size(0, 32),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: const Text('Complete', style: TextStyle(fontSize: 12)),
       );
     }
     return const SizedBox.shrink(); // rejected or completed => no actions
