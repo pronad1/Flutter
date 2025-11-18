@@ -72,17 +72,55 @@ class _DonorDashboardState extends State<DonorDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Donor Dashboard')),
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text('My Donations'),
+        elevation: 0,
+        centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: 'Post new item',
+            onPressed: () => Navigator.pushNamed(context, '/create-item'),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: _uid == null
-            ? const Center(child: Text('Please sign in.'))
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.login, size: 64, color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Please sign in to view your items',
+                      style: theme.textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              )
             : SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _SectionTitle('My items'),
+            Row(
+              children: [
+                Icon(Icons.inventory_2_outlined, color: theme.colorScheme.primary, size: 28),
+                const SizedBox(width: 8),
+                Text(
+                  'My Items',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _myItemsStream(),
               builder: (context, snap) {
@@ -109,9 +147,40 @@ class _DonorDashboardState extends State<DonorDashboard> {
                 });
 
                 if (docs.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Text('You have not posted any items yet.'),
+                  return Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey[200]!),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        children: [
+                          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[300]),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No items yet',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Start sharing by posting your first item',
+                            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          FilledButton.icon(
+                            onPressed: () => Navigator.pushNamed(context, '/create-item'),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Post Item'),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }
                 // Preload owner names for all visible docs (faster than per-item fetch)
@@ -137,53 +206,80 @@ class _DonorDashboardState extends State<DonorDashboard> {
 
                         return Card(
                           elevation: 0,
-                          margin: const EdgeInsets.only(bottom: 10),
+                          margin: const EdgeInsets.only(bottom: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(color: Colors.grey[200]!),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: img.isNotEmpty
-                                      ? Image.network(
-                                    img,
-                                    width: 72,
-                                    height: 72,
-                                    fit: BoxFit.cover,
-                                  )
-                                      : Container(
-                                    width: 72,
-                                    height: 72,
-                                    color: Colors.black12,
-                                    child: const Icon(Icons.image),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        title.isEmpty ? '(Untitled)' : title,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/edit-item',
+                                arguments: id,
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Image with better styling
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
                                         ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: img.isNotEmpty
+                                          ? Image.network(
+                                        img,
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                      )
+                                          : Container(
+                                        width: 80,
+                                        height: 80,
+                                        color: Colors.grey[200],
+                                        child: Icon(Icons.image_outlined, color: Colors.grey[400], size: 32),
                                       ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        desc.isEmpty
-                                            ? 'No description.'
-                                            : desc,
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 8),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          title.isEmpty ? '(Untitled)' : title,
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          desc.isEmpty
+                                              ? 'No description.'
+                                              : desc,
+                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                            color: Colors.grey[600],
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 8),
 
                                       // If displayName is placeholder, try client-side read
                                       if (displayName.trim() == '(No name)' || displayName.startsWith('ID:'))
@@ -257,12 +353,33 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                             builder: (ctx, snap) {
                                               final hasApproved = snap.data == true;
                                               final isAvail = !hasApproved && available;
-                                              return Chip(
-                                                label: Text(isAvail ? 'Available' : 'Unavailable'),
-                                                avatar: Icon(
-                                                  isAvail ? Icons.check_circle : Icons.block,
-                                                  size: 18,
-                                                  color: isAvail ? Colors.green : Colors.redAccent,
+                                              return Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: isAvail ? Colors.green.shade50 : Colors.grey.shade100,
+                                                  borderRadius: BorderRadius.circular(20),
+                                                  border: Border.all(
+                                                    color: isAvail ? Colors.green.shade200 : Colors.grey.shade300,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      isAvail ? Icons.check_circle : Icons.cancel,
+                                                      size: 16,
+                                                      color: isAvail ? Colors.green.shade700 : Colors.grey.shade600,
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Text(
+                                                      isAvail ? 'Available' : 'Unavailable',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: isAvail ? Colors.green.shade700 : Colors.grey.shade600,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               );
                                             },
@@ -277,7 +394,10 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                                 arguments: id,
                                               );
                                             },
-                                            icon: const Icon(Icons.edit),
+                                            icon: Icon(Icons.edit_outlined, color: theme.colorScheme.primary),
+                                            style: IconButton.styleFrom(
+                                              backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                                            ),
                                           )
                                         ],
                                       ),
@@ -286,6 +406,7 @@ class _DonorDashboardState extends State<DonorDashboard> {
                                 ),
                               ],
                             ),
+                          ),
                           ),
                         );
                       }).toList(),
@@ -431,37 +552,55 @@ class _DonorDashboardState extends State<DonorDashboard> {
               },
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             // Info card to navigate to Seeker History
             Card(
-              elevation: 2,
-              color: Colors.blue.shade50,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.blue[200]!),
+              ),
               child: InkWell(
                 onTap: () => Navigator.pushNamed(context, '/seeker-history'),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade50, Colors.blue.shade100.withOpacity(0.3)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
-                      Icon(Icons.history, color: Colors.blue.shade700, size: 32),
-                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade700,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.history, color: Colors.white, size: 28),
+                      ),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'View My Requested Items',
-                              style: TextStyle(
-                                fontSize: 16,
+                              'My Requested Items',
+                              style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.blue.shade900,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Track all items you have requested',
-                              style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                              'Track items you have requested',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.blue.shade700,
+                              ),
                             ),
                           ],
                         ),
@@ -476,12 +615,13 @@ class _DonorDashboardState extends State<DonorDashboard> {
         ),
           ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.pushNamed(context, '/create-item'),
         icon: const Icon(Icons.add),
         label: const Text('Post Item'),
+        elevation: 4,
       ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 
