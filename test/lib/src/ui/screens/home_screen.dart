@@ -108,9 +108,11 @@ class _HomeScreenState extends State<HomeScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Monthly Limit Reached'),
-          content: Text(
-            'You have used all your requests this month ($current/$limit).\n\n'
-            'Your request limit will reset next month. Please try again later.',
+          content: SingleChildScrollView(
+            child: Text(
+              'You have used all your requests this month ($current/$limit).\n\n'
+              'Your request limit will reset next month. Please try again later.',
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK')),
@@ -138,7 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Failed to request'),
-          content: Text(e.toString()),
+          content: SingleChildScrollView(
+            child: Text(e.toString()),
+          ),
           actions: [
             TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK')),
           ],
@@ -682,26 +686,30 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showCategoryFilter() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Select Category', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-                ],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Select Category', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: ListView(
-                children: [
+              Expanded(
+                child: ListView(
+                  children: [
                   _categoryTile('All', Icons.all_inclusive),
                   _categoryTile('Electronics', Icons.devices),
                   _categoryTile('Computers & Laptops', Icons.computer),
@@ -727,6 +735,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
@@ -751,30 +760,43 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      isScrollControlled: true,
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Select Condition', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-                ],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Select Condition', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                  ],
+                ),
               ),
-            ),
-            _conditionTile('All'),
-            _conditionTile('Brand New'),
-            _conditionTile('Like New'),
-            _conditionTile('Excellent'),
-            _conditionTile('Good'),
-            _conditionTile('Fair'),
-            _conditionTile('Used'),
-            _conditionTile('For Parts'),
-            const SizedBox(height: 16),
-          ],
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    _conditionTile('All'),
+                    _conditionTile('Brand New'),
+                    _conditionTile('Like New'),
+                    _conditionTile('Excellent'),
+                    _conditionTile('Good'),
+                    _conditionTile('Fair'),
+                    _conditionTile('Used'),
+                    _conditionTile('For Parts'),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -799,12 +821,14 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Filter by Location'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'Enter location (e.g., PSTU, Dhaka)',
-            prefixIcon: Icon(Icons.location_on),
-            border: OutlineInputBorder(),
+        content: SingleChildScrollView(
+          child: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: 'Enter location (e.g., PSTU, Dhaka)',
+              prefixIcon: Icon(Icons.location_on),
+              border: OutlineInputBorder(),
+            ),
           ),
         ),
         actions: [

@@ -22,8 +22,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
+      body: SafeArea(
+        child: Column(
+          children: [
           // Search and Filters
           Container(
             padding: const EdgeInsets.all(16),
@@ -147,6 +148,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

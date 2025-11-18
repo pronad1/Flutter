@@ -41,11 +41,12 @@ class _SeekerDashboardState extends State<SeekerDashboard> {
     return Scaffold(
       appBar: AppBar(title: const Text('Seeker Dashboard')),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: _myRequests(),
-          builder: (context, snap) {
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: _myRequests(),
+            builder: (context, snap) {
             if (snap.hasError) return Text(snap.error.toString(), style: const TextStyle(color: Colors.red));
             if (!snap.hasData) return const LinearProgressIndicator();
 
@@ -158,6 +159,7 @@ class _SeekerDashboardState extends State<SeekerDashboard> {
             );
           },
         ),
+      ),
       ),
     );
   }

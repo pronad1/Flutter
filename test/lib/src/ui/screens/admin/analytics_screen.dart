@@ -14,9 +14,10 @@ class AnalyticsScreen extends StatelessWidget {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').snapshots(),
-        builder: (context, userSnapshot) {
+      body: SafeArea(
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('users').snapshots(),
+          builder: (context, userSnapshot) {
           if (!userSnapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -170,6 +171,7 @@ class AnalyticsScreen extends StatelessWidget {
             },
           );
         },
+      ),
       ),
     );
   }

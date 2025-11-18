@@ -22,8 +22,9 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
+      body: SafeArea(
+        child: Column(
+          children: [
           // Search and Filter
           Container(
             padding: const EdgeInsets.all(16),
@@ -122,6 +123,7 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
