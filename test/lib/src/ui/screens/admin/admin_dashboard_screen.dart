@@ -15,7 +15,8 @@ class AdminDashboardScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: SafeArea(
+        child: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('users').snapshots(),
         builder: (context, userSnapshot) {
           if (!userSnapshot.hasData) {
@@ -191,6 +192,7 @@ class AdminDashboardScreen extends StatelessWidget {
             },
           );
         },
+      ),
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );

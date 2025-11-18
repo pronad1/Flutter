@@ -503,7 +503,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
 
       // ✅ Use the shared bottom navigation so it's consistent across all main pages
-      bottomNavigationBar: const AppBottomNav(currentIndex: 4),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 5),
       ),
     );
   }

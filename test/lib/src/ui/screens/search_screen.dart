@@ -101,7 +101,8 @@ class _SearchScreenState extends State<SearchScreen> {
     return ChatbotWrapper(
       child: Scaffold(
         appBar: AppBar(title: const Text('Search Items')),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           const SizedBox(height: 8),
           Padding(
@@ -236,8 +237,9 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
         ],
+        ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
       ),
     );
   }

@@ -22,9 +22,10 @@ class AppBottomNav extends StatelessWidget {
     Routes.seeker: 1,
     Routes.adminApproval: 1,
     Routes.adminDashboard: 1,
-    Routes.search: 2,
-    Routes.editProfile: 3,
-    Routes.profile: 4,
+    Routes.seekerHistory: 2,
+    Routes.search: 3,
+    Routes.editProfile: 4,
+    Routes.profile: 5,
   };
 
   @override
@@ -42,7 +43,7 @@ class AppBottomNav extends StatelessWidget {
 
     // Compute a safe selected index
     final inferredIndex = _routeIndex[routeName];
-    final selectedIndex = (currentIndex ?? inferredIndex ?? 0).clamp(0, 4);
+    final selectedIndex = (currentIndex ?? inferredIndex ?? 0).clamp(0, 5);
 
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
@@ -70,6 +71,11 @@ class AppBottomNav extends StatelessWidget {
                   ? const Icon(Icons.admin_panel_settings)
                   : const Icon(Icons.volunteer_activism_rounded),
               label: roleTitle, // "Admin Panel" for admin, "Donor" for others
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.history_outlined),
+              selectedIcon: Icon(Icons.history),
+              label: 'Requests',
             ),
             const NavigationDestination(
               icon: Icon(Icons.search_outlined),
@@ -114,12 +120,15 @@ class AppBottomNav extends StatelessWidget {
         }
         break;
       case 2:
-        targetRoute = Routes.search;
+        targetRoute = Routes.seekerHistory;
         break;
       case 3:
-        targetRoute = Routes.editProfile;
+        targetRoute = Routes.search;
         break;
       case 4:
+        targetRoute = Routes.editProfile;
+        break;
+      case 5:
         targetRoute = Routes.profile;
         break;
     }

@@ -12,6 +12,9 @@ class Item {
   final String? pickupAddress;  // Pickup location address
   final bool available;
   final Timestamp createdAt;
+  final double? price;          // Price for selling items (null for donations)
+  final bool isSelling;         // True if item is for sale, false if donation
+  final bool isSpecialDeal;     // True if brand new item with attractive price
 
   Item({
     required this.id,
@@ -25,6 +28,9 @@ class Item {
     this.pickupAddress,
     required this.available,
     required this.createdAt,
+    this.price,
+    this.isSelling = false,
+    this.isSpecialDeal = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -39,6 +45,9 @@ class Item {
       'pickupAddress': pickupAddress,
       'available': available,
       'createdAt': createdAt,
+      'price': price,
+      'isSelling': isSelling,
+      'isSpecialDeal': isSpecialDeal,
     };
   }
 
@@ -56,6 +65,9 @@ class Item {
       pickupAddress: d['pickupAddress'],
       available: (d['available'] as bool?) ?? true,
       createdAt: (d['createdAt'] as Timestamp?) ?? Timestamp.now(),
+      price: (d['price'] as num?)?.toDouble(),
+      isSelling: (d['isSelling'] as bool?) ?? false,
+      isSpecialDeal: (d['isSpecialDeal'] as bool?) ?? false,
     );
   }
 }

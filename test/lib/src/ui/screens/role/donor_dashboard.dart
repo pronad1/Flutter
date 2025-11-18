@@ -74,10 +74,11 @@ class _DonorDashboardState extends State<DonorDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Donor Dashboard')),
-      body: _uid == null
-          ? const Center(child: Text('Please sign in.'))
-          : SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+      body: SafeArea(
+        child: _uid == null
+            ? const Center(child: Text('Please sign in.'))
+            : SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -431,138 +432,49 @@ class _DonorDashboardState extends State<DonorDashboard> {
             ),
 
             const SizedBox(height: 16),
-            const _SectionTitle('My Requests (Seeker History)'),
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _myRequestsStream(),
-              builder: (context, snap) {
-                if (snap.hasError) {
-                  return _ErrorBox(error: snap.error.toString());
-                }
-                if (!snap.hasData) {
-                  return const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: LinearProgressIndicator(),
-                  );
-                }
-
-                // sort locally by createdAt desc
-                final reqDocs = [...snap.data!.docs];
-                reqDocs.sort((a, b) {
-                  final ta = a.data()['createdAt'] as Timestamp?;
-                  final tb = b.data()['createdAt'] as Timestamp?;
-                  final da = ta?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
-                  final db = tb?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
-                  return db.compareTo(da);
-                });
-
-                if (reqDocs.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Text('You have not requested any items yet.'),
-                  );
-                }
-
-                return Column(
-                  children: reqDocs.map((r) {
-                    final rd = r.data();
-                    final itemId = _s(rd['itemId']);
-                    final status = _s(rd['status']);
-
-                    return FutureBuilder<Item>(
-                      future: _itemService.getItemById(itemId),
-                      builder: (ctx, itemSnap) {
-                        if (itemSnap.connectionState == ConnectionState.waiting) {
-                          return const Card(
-                            margin: EdgeInsets.only(bottom: 10),
-                            child: ListTile(
-                              leading: SizedBox(
-                                width: 56,
-                                height: 56,
-                                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            // Info card to navigate to Seeker History
+            Card(
+              elevation: 2,
+              color: Colors.blue.shade50,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: InkWell(
+                onTap: () => Navigator.pushNamed(context, '/seeker-history'),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.history, color: Colors.blue.shade700, size: 32),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'View My Requested Items',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade900,
                               ),
-                              title: Text('Loading...'),
                             ),
-                          );
-                        }
-
-                        if (itemSnap.hasError || !itemSnap.hasData) {
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: ListTile(
-                              leading: const Icon(Icons.error_outline, size: 36),
-                              title: Text('Item: $itemId'),
-                              subtitle: const Text('Failed to load item details'),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Track all items you have requested',
+                              style: TextStyle(color: Colors.grey[700], fontSize: 13),
                             ),
-                          );
-                        }
-
-                        final item = itemSnap.data!;
-                        final img = item.imageUrl ?? '';
-                        final ownerId = item.ownerId;
-
-                        return Card(
-                          elevation: 0,
-                          margin: const EdgeInsets.only(bottom: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ListTile(
-                            leading: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: img.isNotEmpty
-                                  ? Image.network(img, width: 56, height: 56, fit: BoxFit.cover)
-                                  : const Icon(Icons.inventory_2_outlined, size: 36),
-                            ),
-                            title: Text(item.title.isEmpty ? '(Untitled)' : item.title),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(item.description.isEmpty ? 'No description.' : item.description, maxLines: 2, overflow: TextOverflow.ellipsis),
-                                const SizedBox(height: 4),
-                                Text('Status: $status', style: TextStyle(color: _statusColor(status), fontWeight: FontWeight.w600)),
-                                if (ownerId.isNotEmpty)
-                                  FutureBuilder<String>(
-                                    future: _itemService.getUserName(ownerId),
-                                    builder: (ctx2, ownerSnap) {
-                                      final ownerName = (ownerSnap.hasData && ownerSnap.data!.trim().isNotEmpty && ownerSnap.data! != '(No name)')
-                                          ? ownerSnap.data!
-                                          : 'Unknown donor';
-                                      return Row(
-                                        children: [
-                                          Text('Owner: ', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                                          InkWell(
-                                            onTap: () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => PublicProfileScreen(userId: ownerId),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              ownerName,
-                                              style: TextStyle(
-                                                color: Colors.blue[700],
-                                                fontSize: 12,
-                                                decoration: TextDecoration.underline,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }).toList(),
-                );
-              },
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios, color: Colors.blue.shade700, size: 20),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
+          ),
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
       floatingActionButton: FloatingActionButton.extended(

@@ -262,7 +262,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: Scaffold(
         appBar: AppBar(title: const Text('Edit Profile')),
 
-      body: _isLoading
+      body: SafeArea(
+        child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -343,7 +344,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
+        ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 4),
       ),
     );
   }
