@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "690134956948",
+    "project_id": "reuse-hub-4b3f7",
+    "storage_bucket": "reuse-hub-4b3f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690134956948:android:6544569e36bda56ae9ad81",
+        "android_client_info": {
+          "package_name": "com.example.software"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDL_jN5ULzH1YQ9dcEPu9dSBLOINs1X68"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
