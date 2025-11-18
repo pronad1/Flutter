@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../services/review_service.dart';
 import '../../../services/item_service.dart';
+import '../../widgets/chatbot/chatbot_wrapper.dart';
 
 class PublicProfileScreen extends StatefulWidget {
   final String userId;

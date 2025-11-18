@@ -2,19 +2,21 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../widgets/chatbot/chatbot_wrapper.dart';
 
 class AnalyticsScreen extends StatelessWidget {
   const AnalyticsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics Dashboard'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-      ),
-      body: SafeArea(
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Analytics Dashboard'),
+          backgroundColor: Colors.deepPurple,
+          foregroundColor: Colors.white,
+        ),
+        body: SafeArea(
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance.collection('users').snapshots(),
           builder: (context, userSnapshot) {
@@ -171,7 +173,8 @@ class AnalyticsScreen extends StatelessWidget {
             },
           );
         },
-      ),
+        ),
+        ),
       ),
     );
   }

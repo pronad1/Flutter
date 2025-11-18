@@ -292,41 +292,77 @@ class _HomeScreenState extends State<HomeScreen> {
                       future: _itemService.getUserNames(ownerIds),
                       builder: (ctx, namesSnap) {
                         final names = namesSnap.data ?? {};
+                        final filteredDocs = _applyFilters(docs);
+                        
+                        // Responsive layout: grid on large screens, list on mobile
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        final crossAxisCount = screenWidth > 1200 ? 3 : (screenWidth > 800 ? 2 : 1);
+                        
+                        if (crossAxisCount > 1) {
+                          // Grid view for tablets and desktops
+                          return GridView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              childAspectRatio: 0.85,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            itemCount: filteredDocs.length,
+                            itemBuilder: (context, i) => _buildItemCard(filteredDocs[i], names),
+                          );
+                        }
+                        
+                        // List view for mobile
                         return ListView.separated(
                           padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
-                          itemCount: docs.length,
+                          itemCount: filteredDocs.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 8),
-                          itemBuilder: (context, i) {
-                            final doc = docs[i];
-                            final d = doc.data();
-                            final id = doc.id;
-                            final ownerId = (d['ownerId'] ?? '').toString();
-                            final title = (d['title'] ?? '').toString();
-                            final desc = (d['description'] ?? '').toString();
-                            final pickupAddress = (d['pickupAddress'] ?? '').toString();
-                            final imageUrl = (d['imageUrl'] ?? '').toString();
-                            final category = (d['category'] ?? '').toString();
-                            final condition = (d['condition'] ?? '').toString();
-                            final price = (d['price'] as num?)?.toDouble();
-                            final isSelling = (d['isSelling'] as bool?) ?? false;
-                            final rawAvailable = (d['available'] as bool?) ?? true;
-                            final available = rawAvailable;
-                            
-                            // Check if item is special (Brand New + Selling + Has Price)
-                            final isSpecial = isSelling && 
-                                              condition == "Brand New" && 
-                                              price != null && 
-                                              price > 0;
-                            
-                            final ownerNameDoc = (d['ownerName'] ?? '').toString();
-                            var resolvedName = (ownerNameDoc.trim().isNotEmpty && ownerNameDoc.trim() != '(No name)')
-                                ? ownerNameDoc
-                                : (names[ownerId] ?? '(No name)');
-                            final displayName = (resolvedName.trim() == '(No name)')
-                                ? (ownerId.isNotEmpty ? 'ID:${ownerId.substring(0, min(8, ownerId.length))}' : '(No name)')
-                                : resolvedName;
+                          itemBuilder: (context, i) => _buildItemCard(filteredDocs[i], names),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: const AppBottomNav(currentIndex: 0),
+      ),
+    );
+  }
 
-                            return Card(
+  Widget _buildItemCard(QueryDocumentSnapshot<Map<String, dynamic>> doc, Map<String, String> names) {
+    final d = doc.data();
+    final id = doc.id;
+    final ownerId = (d['ownerId'] ?? '').toString();
+    final title = (d['title'] ?? '').toString();
+    final desc = (d['description'] ?? '').toString();
+    final pickupAddress = (d['pickupAddress'] ?? '').toString();
+    final imageUrl = (d['imageUrl'] ?? '').toString();
+    final category = (d['category'] ?? '').toString();
+    final condition = (d['condition'] ?? '').toString();
+    final price = (d['price'] as num?)?.toDouble();
+    final isSelling = (d['isSelling'] as bool?) ?? false;
+    final rawAvailable = (d['available'] as bool?) ?? true;
+    final available = rawAvailable;
+    
+    // Check if item is special (Brand New + Selling + Has Price)
+    final isSpecial = isSelling && 
+                      condition == "Brand New" && 
+                      price != null && 
+                      price > 0;
+    
+    final ownerNameDoc = (d['ownerName'] ?? '').toString();
+    var resolvedName = (ownerNameDoc.trim().isNotEmpty && ownerNameDoc.trim() != '(No name)')
+        ? ownerNameDoc
+        : (names[ownerId] ?? '(No name)');
+    final displayName = (resolvedName.trim() == '(No name)')
+        ? (ownerId.isNotEmpty ? 'ID:${ownerId.substring(0, min(8, ownerId.length))}' : '(No name)')
+        : resolvedName;
+
+    return Card(
                               elevation: isSpecial ? 4 : 2,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -625,26 +661,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                               );
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
-        floatingActionButton: _canPost
-            ? FloatingActionButton.extended(
-                onPressed: () => Navigator.pushNamed(context, '/create-item'),
-                icon: const Icon(Icons.add),
-                label: const Text('Post Item'),
-              )
-            : null,
-      ),
-    );
   }
 
   Widget _buildFilterChip({required IconData icon, required String label, required VoidCallback onTap, bool fullWidth = false}) {

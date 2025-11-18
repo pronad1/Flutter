@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/chatbot/chatbot_wrapper.dart';
 import '../../../services/item_service.dart';
 import '../../../models/item.dart';
 import '../profile/public_profile_screen.dart';
@@ -74,9 +75,11 @@ class _DonorDashboardState extends State<DonorDashboard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
+    return ChatbotWrapper(
+      showChatbot: false, // Disabled because we have Post Item button
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
         title: const Text('My Donations'),
         elevation: 0,
         centerTitle: false,
@@ -622,6 +625,7 @@ class _DonorDashboardState extends State<DonorDashboard> {
         elevation: 4,
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
+      ),
     );
   }
 

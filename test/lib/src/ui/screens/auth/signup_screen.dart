@@ -1,6 +1,7 @@
 // lib/src/screens/signup_screen.dart
 import 'package:flutter/material.dart';
 import 'package:software/src/services/auth_service.dart';
+import '../../widgets/responsive_wrapper.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -69,8 +70,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Sign Up'), centerTitle: true),
-      body: SafeArea(
-        child: Center(
+      body: ResponsiveWrapper(
+        maxWidth: 500,
+        child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Form(
