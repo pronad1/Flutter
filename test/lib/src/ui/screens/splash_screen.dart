@@ -530,7 +530,7 @@ class _SplashScreenState extends State<SplashScreen>
                                         color: Colors.white,
                                       )),
                                   SizedBox(height: 10),
-                                  Text("support@reusehub.com",
+                                  Text("prosenjit1156@gmail.com",
                                       style: TextStyle(color: Colors.white70)),
                                   SizedBox(height: 20),
                                   Text("© 2025 Reuse Hub. All rights reserved.",
