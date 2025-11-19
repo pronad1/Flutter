@@ -10,7 +10,7 @@ class AuthService {
   Future<String?> signUp({
     required String email,
     required String password,
-    required String role,            // "Donor" | "Seeker"
+    required String role,            
     String? name,
     String? mobile,
   }) async {
