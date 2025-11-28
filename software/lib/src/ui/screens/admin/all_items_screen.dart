@@ -23,14 +23,54 @@ class _AllItemsScreenState extends State<AllItemsScreen> {
           title: const Text('All Items'),
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,
+          elevation: 2,
         ),
         body: SafeArea(
         child: Column(
           children: [
+          // Header Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade700, Colors.green.shade900],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.inventory_2, color: Colors.white, size: 28),
+                    SizedBox(width: 12),
+                    Text(
+                      'Item Inventory',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Browse and manage all donation items',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+              ],
+            ),
+          ),
           // Search and Filter
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
+            color: Colors.grey[50],
             child: Column(
               children: [
                 // Search Bar

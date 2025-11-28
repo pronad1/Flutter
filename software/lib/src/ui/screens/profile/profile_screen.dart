@@ -751,7 +751,7 @@ class _AdminStatsCard extends StatelessWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 1.5,
+                  childAspectRatio: 1.3,
                   children: [
                     _AdminStatCard(
                       icon: Icons.people,
@@ -809,28 +809,36 @@ class _AdminStatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 6),
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
+          const SizedBox(height: 2),
+          Flexible(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

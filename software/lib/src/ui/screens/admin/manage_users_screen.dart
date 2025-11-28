@@ -23,14 +23,54 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
           title: const Text('Manage Users'),
           backgroundColor: Colors.orange,
           foregroundColor: Colors.white,
+          elevation: 2,
         ),
         body: SafeArea(
         child: Column(
           children: [
+          // Header Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.orange.shade700, Colors.orange.shade900],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.manage_accounts, color: Colors.white, size: 28),
+                    SizedBox(width: 12),
+                    Text(
+                      'User Management',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'View, search, and manage all registered users',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+              ],
+            ),
+          ),
           // Search and Filters
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
+            color: Colors.grey[50],
             child: Column(
               children: [
                 // Search Bar
