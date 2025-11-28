@@ -15,9 +15,53 @@ class AnalyticsScreen extends StatelessWidget {
           title: const Text('Analytics Dashboard'),
           backgroundColor: Colors.deepPurple,
           foregroundColor: Colors.white,
+          elevation: 2,
         ),
         body: SafeArea(
-        child: StreamBuilder<QuerySnapshot>(
+        child: Column(
+          children: [
+            // Header Section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade900],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.analytics, color: Colors.white, size: 28),
+                      SizedBox(width: 12),
+                      Text(
+                        'Analytics & Insights',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Monitor system statistics and trends',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance.collection('users').snapshots(),
           builder: (context, userSnapshot) {
           if (!userSnapshot.hasData) {
@@ -72,9 +116,15 @@ class AnalyticsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Overview Cards
-                    const Text(
-                      'Overview',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        Icon(Icons.dashboard, color: Colors.deepPurple, size: 24),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Overview',
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     _buildOverviewGrid(
@@ -86,9 +136,15 @@ class AnalyticsScreen extends StatelessWidget {
                     const SizedBox(height: 32),
 
                     // User Distribution
-                    const Text(
-                      'User Distribution',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        Icon(Icons.people, color: Colors.deepPurple, size: 24),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'User Distribution',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Card(
@@ -120,9 +176,15 @@ class AnalyticsScreen extends StatelessWidget {
                     const SizedBox(height: 32),
 
                     // Item Status
-                    const Text(
-                      'Item Status',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        Icon(Icons.inventory, color: Colors.deepPurple, size: 24),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Item Status',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Card(
@@ -141,9 +203,15 @@ class AnalyticsScreen extends StatelessWidget {
                     const SizedBox(height: 32),
 
                     // User Approval Status
-                    const Text(
-                      'User Approval Status',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        Icon(Icons.verified_user, color: Colors.deepPurple, size: 24),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'User Approval Status',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -173,6 +241,9 @@ class AnalyticsScreen extends StatelessWidget {
             },
           );
         },
+              ),
+            ),
+          ],
         ),
         ),
       ),
