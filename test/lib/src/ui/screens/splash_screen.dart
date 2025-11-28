@@ -172,7 +172,7 @@ class _SplashScreenState extends State<SplashScreen>
                   FadeTransition(
                     opacity: _fadeAnimation,
                     child: const Text(
-                      "Share, Reuse, Sustain:",
+                      "পুরনো জিনিসে নতুন হাসি😊",
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -182,19 +182,12 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                   const Text(
-                    "Your Community Reuse Platform",
+                    "বাংলাদেশের রিইউজ কমিউনিটি",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.green,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Reuse Hub connects donors and seekers to exchange reusable goods for free, "
-                        "promoting sustainability and reducing waste in your community.",
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
