@@ -24,7 +24,7 @@ android {
         applicationId = "com.example.software"
 
         // Increase minSdk to 23 to satisfy firebase_auth plugin requirements
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
 
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

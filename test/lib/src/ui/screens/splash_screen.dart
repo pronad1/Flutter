@@ -314,8 +314,8 @@ class _SplashScreenState extends State<SplashScreen>
                                       child: InkWell(
                                         borderRadius: BorderRadius.circular(12),
                                         onTap: () {
-                                          // Redirect to signup page when unauthenticated user clicks item
-                                          Navigator.pushNamed(context, '/signup');
+                                          // Redirect to login page when unauthenticated user clicks item
+                                          Navigator.pushNamed(context, '/login');
                                         },
                                         child: Padding(
                                           padding: const EdgeInsets.all(12),

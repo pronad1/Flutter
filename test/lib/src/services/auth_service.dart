@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';  // For debugPrint
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   /// Sign up then send email verification and mark approved=false
   Future<String?> signUp({
@@ -117,7 +119,83 @@ class AuthService {
   }
 
   Future<void> signOut() async {
+    await _googleSignIn.signOut();
     await _auth.signOut();
+  }
+
+  /// Google Sign-In
+  Future<String?> signInWithGoogle() async {
+    try {
+      // Trigger Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        return 'Google sign-in cancelled';
+      }
+
+      // Obtain auth details
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase
+      final userCredential = await _auth.signInWithCredential(credential);
+      final user = userCredential.user;
+
+      if (user == null) return 'Sign-in failed';
+
+      // Check if user document exists
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+
+      if (!userDoc.exists) {
+        // Create new user profile (auto-approved for Google sign-in)
+        await _firestore.collection('users').doc(user.uid).set({
+          'email': user.email ?? '',
+          'role': 'seeker', // Default role
+          'name': user.displayName ?? '',
+          'mobile': user.phoneNumber ?? '',
+          'phone': user.phoneNumber ?? '',
+          'approved': true, // Auto-approve Google users
+          'createdAt': FieldValue.serverTimestamp(),
+          'approvedAt': FieldValue.serverTimestamp(),
+          'approvedBy': 'google_auth',
+        });
+
+        // Create public profile
+        try {
+          await _firestore.collection('publicProfiles').doc(user.uid).set({
+            'name': user.displayName ?? '',
+            'bio': '',
+            'photoUrl': user.photoURL ?? '',
+            'profilePicUrl': user.photoURL ?? '',
+            'email': user.email ?? '',
+            'phone': user.phoneNumber ?? '',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          debugPrint('✅ Created publicProfiles/${user.uid} for Google user');
+        } catch (e) {
+          debugPrint('⚠️ Could not create publicProfiles/${user.uid}: $e');
+        }
+      } else {
+        // Check if user is approved
+        final approved = (userDoc.data()?['approved'] as bool?) ?? false;
+        if (!approved) {
+          await _auth.signOut();
+          await _googleSignIn.signOut();
+          return 'Your account is pending admin approval.';
+        }
+      }
+
+      return null; // Success
+    } on FirebaseAuthException catch (e) {
+      return _firebaseAuthErrorToMessage(e);
+    } catch (e) {
+      return 'Google sign-in failed: $e';
+    }
   }
 
   /// Helper to resend email verification (callable from UI)

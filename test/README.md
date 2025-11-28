@@ -443,6 +443,8 @@ The ReuseHub AI Assistant is now a **fully functional, intelligent helper** that
 
 **The AI is now a true assistant that knows everything about your ReuseHub app!** 🚀
 
+# 0. pubspec.yaml
+flutter pub get
 
 # 1. Build
 flutter build web
