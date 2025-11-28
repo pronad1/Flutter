@@ -157,28 +157,29 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Explore Items'),
-          elevation: 0,
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          elevation: 2,
           actions: [
             PopupMenuButton<String>(
               icon: const Icon(Icons.sort),
               tooltip: 'Sort by',
               onSelected: (value) => setState(() => _sortBy = value),
               itemBuilder: (context) => [
-                PopupMenuItem(value: 'newest', child: Row(children: [Icon(Icons.access_time, size: 20), SizedBox(width: 8), Text('Newest First')])),
-                PopupMenuItem(value: 'oldest', child: Row(children: [Icon(Icons.history, size: 20), SizedBox(width: 8), Text('Oldest First')])),
-                PopupMenuItem(value: 'name', child: Row(children: [Icon(Icons.sort_by_alpha, size: 20), SizedBox(width: 8), Text('Name A-Z')])),
+                PopupMenuItem(value: 'newest', child: Row(children: [Icon(Icons.access_time, size: 20, color: Colors.green), SizedBox(width: 8), Text('Newest First')])),
+                PopupMenuItem(value: 'oldest', child: Row(children: [Icon(Icons.history, size: 20, color: Colors.green), SizedBox(width: 8), Text('Oldest First')])),
+                PopupMenuItem(value: 'name', child: Row(children: [Icon(Icons.sort_by_alpha, size: 20, color: Colors.green), SizedBox(width: 8), Text('Name A-Z')])),
               ],
             ),
           ],
         ),
-        body: SafeArea(
-          child: Column(
+        body: Column(
             children: [
               // Filter Bar
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: Colors.white,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -206,14 +207,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () => _showConditionFilter(),
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildFilterChip(
+                            icon: Icons.location_on,
+                            label: _selectedLocation?.isNotEmpty == true ? _selectedLocation! : 'Location',
+                            onTap: () => _showLocationFilter(),
+                          ),
+                        ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    _buildFilterChip(
-                      icon: Icons.location_on,
-                      label: _selectedLocation?.isNotEmpty == true ? _selectedLocation! : 'Location',
-                      onTap: () => _showLocationFilter(),
-                      fullWidth: true,
                     ),
                     if (_selectedCategory != null || _selectedCondition != null || _selectedLocation != null)
                       Padding(
@@ -315,9 +317,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         
                         // List view for mobile
                         return ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
                           itemCount: filteredDocs.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
                           itemBuilder: (context, i) => _buildItemCard(filteredDocs[i], names),
                         );
                       },
@@ -327,7 +329,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-        ),
         bottomNavigationBar: const AppBottomNav(currentIndex: 0),
       ),
     );
@@ -363,18 +364,19 @@ class _HomeScreenState extends State<HomeScreen> {
         : resolvedName;
 
     return Card(
-                              elevation: isSpecial ? 4 : 2,
+                              elevation: isSpecial ? 3 : 1,
+                              shadowColor: isSpecial ? Colors.amber.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                                 side: isSpecial 
-                                    ? BorderSide(color: Colors.amber.shade700, width: 2)
+                                    ? BorderSide(color: Colors.amber.shade600, width: 2)
                                     : BorderSide.none,
                               ),
                               child: Stack(
                                 children: [
                                   // Main content
                                   InkWell(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(16),
                                     onTap: () {
                                       // Open the donor's public profile with the clicked item
                                       if (ownerId.isNotEmpty) {
@@ -390,12 +392,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                       }
                                     },
                                     child: Padding(
-                                      padding: const EdgeInsets.all(12),
+                                      padding: const EdgeInsets.all(14),
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           ClipRRect(
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(12),
                                             child: imageUrl.isNotEmpty
                                                 ? Image.network(
                                                     imageUrl,
@@ -426,74 +428,102 @@ class _HomeScreenState extends State<HomeScreen> {
                                                           ),
                                                         ),
                                                       ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  // Category, Condition, Location in one line
+                                                  Wrap(
+                                                    spacing: 6,
+                                                    runSpacing: 4,
+                                                    children: [
+                                                      if (category.isNotEmpty)
+                                                        Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.green.shade50,
+                                                            borderRadius: BorderRadius.circular(6),
+                                                            border: Border.all(color: Colors.green.shade200),
+                                                          ),
+                                                          child: Text(
+                                                            category,
+                                                            style: TextStyle(fontSize: 11, color: Colors.green[700], fontWeight: FontWeight.w600),
+                                                          ),
+                                                        ),
                                                       if (condition.isNotEmpty)
                                                         Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                                           decoration: BoxDecoration(
                                                             color: _getConditionColor(condition),
-                                                            borderRadius: BorderRadius.circular(8),
+                                                            borderRadius: BorderRadius.circular(6),
                                                           ),
                                                           child: Text(
                                                             condition,
-                                                            style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                                                            style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
                                                           ),
                                                         ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Row(
-                                                    children: [
-                                                      if (category.isNotEmpty)
-                                                        Text(
-                                                          category,
-                                                          style: TextStyle(fontSize: 12, color: Colors.green[700], fontWeight: FontWeight.w600),
+                                                      if (pickupAddress.isNotEmpty)
+                                                        Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.red.shade50,
+                                                            borderRadius: BorderRadius.circular(6),
+                                                            border: Border.all(color: Colors.red.shade200),
+                                                          ),
+                                                          child: Row(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              Icon(Icons.location_on, size: 12, color: Colors.red[700]),
+                                                              const SizedBox(width: 2),
+                                                              Flexible(
+                                                                child: Text(
+                                                                  pickupAddress,
+                                                                  style: TextStyle(fontSize: 11, color: Colors.red[700], fontWeight: FontWeight.w500),
+                                                                  maxLines: 1,
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
                                                         ),
-                                                      if (category.isNotEmpty && (isSelling || price != null))
-                                                        Text(' • ', style: TextStyle(color: Colors.grey[600])),
                                                       if (isSelling && price != null && price > 0)
-                                                        Text(
-                                                          '৳${price.toStringAsFixed(0)}',
-                                                          style: TextStyle(
-                                                            fontSize: 14,
-                                                            color: Colors.orange[800],
-                                                            fontWeight: FontWeight.bold,
+                                                        Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.orange.shade50,
+                                                            borderRadius: BorderRadius.circular(6),
+                                                            border: Border.all(color: Colors.orange.shade200),
+                                                          ),
+                                                          child: Text(
+                                                            '৳${price.toStringAsFixed(0)}',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                              color: Colors.orange[800],
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
                                                           ),
                                                         )
                                                       else if (isSelling)
-                                                        Text(
-                                                          'For Sale',
-                                                          style: TextStyle(fontSize: 12, color: Colors.orange[700], fontWeight: FontWeight.w600),
+                                                        Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.orange.shade50,
+                                                            borderRadius: BorderRadius.circular(6),
+                                                            border: Border.all(color: Colors.orange.shade200),
+                                                          ),
+                                                          child: Text(
+                                                            'For Sale',
+                                                            style: TextStyle(fontSize: 11, color: Colors.orange[700], fontWeight: FontWeight.w600),
+                                                          ),
                                                         ),
                                                     ],
                                                   ),
-                                                  const SizedBox(height: 4),
+                                                  const SizedBox(height: 6),
                                                   Text(
                                                     desc.isEmpty ? 'No description.' : desc,
-                                                    style: const TextStyle(color: Colors.black87),
+                                                    style: const TextStyle(color: Colors.black87, fontSize: 13),
                                                     maxLines: 2,
                                                     overflow: TextOverflow.ellipsis,
                                                   ),
-                                                  if (pickupAddress.isNotEmpty) ...[
-                                                    const SizedBox(height: 6),
-                                                    Row(
-                                                      children: [
-                                                        Icon(Icons.location_on, size: 14, color: Colors.red[600]),
-                                                        const SizedBox(width: 4),
-                                                        Expanded(
-                                                          child: Text(
-                                                            'Pickup: $pickupAddress',
-                                                            style: TextStyle(
-                                                              color: Colors.red[700],
-                                                              fontSize: 12,
-                                                              fontWeight: FontWeight.w500,
-                                                            ),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
                                                   const SizedBox(height: 8),
                                                   // If displayName is just an ID or placeholder, try a client-side read to get the real name
                                                   if (displayName.startsWith('ID:') || displayName == '(No name)')
@@ -665,35 +695,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFilterChip({required IconData icon, required String label, required VoidCallback onTap, bool fullWidth = false}) {
     final isActive = (label != 'Category' && label != 'Condition' && label != 'Location');
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: fullWidth ? double.infinity : null,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.green : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isActive ? Colors.green.shade700 : Colors.grey.shade300),
-        ),
-        child: Row(
-          mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: isActive ? Colors.white : Colors.grey[700]),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? Colors.white : Colors.grey[700],
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: fullWidth ? double.infinity : null,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isActive ? Colors.green.shade600 : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isActive ? Colors.green.shade700 : Colors.grey.shade300,
+              width: 1.5,
             ),
-          ],
+          ),
+          child: Row(
+            mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: isActive ? Colors.white : Colors.grey[600]),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isActive ? Colors.white : Colors.grey[700],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

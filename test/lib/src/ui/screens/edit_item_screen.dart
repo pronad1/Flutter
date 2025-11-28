@@ -148,119 +148,281 @@ class _EditItemScreenState extends State<EditItemScreen> {
 
     return ChatbotWrapper(
       child: Scaffold(
-        appBar: AppBar(title: const Text('Edit Item')),
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: const Text('Edit Item', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.green,
+          elevation: 2,
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 56,
-                  backgroundImage: preview,
-                  child: preview == null
-                      ? const Icon(Icons.add_a_photo, size: 40)
-                      : null,
+              // Professional Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade700, Colors.green.shade900],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.edit, color: Colors.white, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Update Item Details',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Modify your item information',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Item Photo Section
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.image, color: Colors.green.shade700),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Item Photo',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.green, width: 3),
+                            color: Colors.grey[100],
+                          ),
+                          child: preview != null
+                              ? ClipOval(
+                                  child: Image(
+                                    image: preview,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_a_photo, size: 40, color: Colors.green),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Tap to change',
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              TextFormField(
-                controller: _title,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
+              // Basic Information Section
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                validator: (v) =>
-                v == null || v.trim().isEmpty ? 'Enter a title' : null,
-              ),
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _desc,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) =>
-                v == null || v.trim().isEmpty ? 'Enter a description' : null,
-              ),
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _address,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Pickup Address (Optional)',
-                  hintText: 'Where can seekers pick up this item?',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _category,
-                      items: const [
-                        DropdownMenuItem(value: 'Home', child: Text('Home')),
-                        DropdownMenuItem(
-                            value: 'Electronics', child: Text('Electronics')),
-                        DropdownMenuItem(value: 'Books', child: Text('Books')),
-                        DropdownMenuItem(value: 'Other', child: Text('Other')),
-                      ],
-                      onChanged: (v) => setState(() => _category = v),
-                      decoration: const InputDecoration(
-                        labelText: 'Category',
-                        border: OutlineInputBorder(),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.green.shade700),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Basic Information',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                        ],
                       ),
-                      validator: (v) =>
-                      v == null ? 'Select a category' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _condition,
-                      items: const [
-                        DropdownMenuItem(value: 'New', child: Text('New')),
-                        DropdownMenuItem(value: 'Good', child: Text('Good')),
-                        DropdownMenuItem(value: 'Used', child: Text('Used')),
-                      ],
-                      onChanged: (v) => setState(() => _condition = v),
-                      decoration: const InputDecoration(
-                        labelText: 'Condition',
-                        border: OutlineInputBorder(),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _title,
+                        decoration: InputDecoration(
+                          labelText: 'Title',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                        validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Enter a title' : null,
                       ),
-                      validator: (v) =>
-                      v == null ? 'Select condition' : null,
-                    ),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _desc,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          labelText: 'Description',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                        validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Enter a description' : null,
+                      ),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _address,
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          labelText: 'Pickup Address (Optional)',
+                          hintText: 'Where can seekers pick up this item?',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          prefixIcon: const Icon(Icons.location_on),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: _category,
+                              items: const [
+                                DropdownMenuItem(value: 'Home', child: Text('Home')),
+                                DropdownMenuItem(
+                                    value: 'Electronics', child: Text('Electronics')),
+                                DropdownMenuItem(value: 'Books', child: Text('Books')),
+                                DropdownMenuItem(value: 'Other', child: Text('Other')),
+                              ],
+                              onChanged: (v) => setState(() => _category = v),
+                              decoration: InputDecoration(
+                                labelText: 'Category',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                filled: true,
+                                fillColor: Colors.grey[50],
+                              ),
+                              validator: (v) =>
+                              v == null ? 'Select a category' : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: _condition,
+                              items: const [
+                                DropdownMenuItem(value: 'New', child: Text('New')),
+                                DropdownMenuItem(value: 'Good', child: Text('Good')),
+                                DropdownMenuItem(value: 'Used', child: Text('Used')),
+                              ],
+                              onChanged: (v) => setState(() => _condition = v),
+                              decoration: InputDecoration(
+                                labelText: 'Condition',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                filled: true,
+                                fillColor: Colors.grey[50],
+                              ),
+                              validator: (v) =>
+                              v == null ? 'Select condition' : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      SwitchListTile(
+                        value: _available,
+                        onChanged: (v) => setState(() => _available = v),
+                        title: const Text('Available'),
+                        tileColor: Colors.grey[50],
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 12),
-
-              SwitchListTile(
-                value: _available,
-                onChanged: (v) => setState(() => _available = v),
-                title: const Text('Available'),
-              ),
-
               const SizedBox(height: 16),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _save,
-                  icon: const Icon(Icons.check),
-                  label: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Text('Save Changes'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
                   ),
+                  icon: const Icon(Icons.check),
+                  label: const Text('Save Changes', style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],

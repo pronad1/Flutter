@@ -100,33 +100,107 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return ChatbotWrapper(
       child: Scaffold(
-        appBar: AppBar(title: const Text('Search Items')),
+        appBar: AppBar(
+          title: const Text('Search Items'),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          elevation: 2,
+        ),
       body: SafeArea(
         child: Column(
         children: [
-          const SizedBox(height: 8),
+          // Header Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade700, Colors.green.shade900],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.search, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Find Your Perfect Item',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Search by keywords in title or description',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
               controller: _qCtrl,
               decoration: InputDecoration(
                 hintText: 'Search by title or description',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, color: Colors.green),
+                suffixIcon: _query.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () {
+                          _qCtrl.clear();
+                          setState(() {
+                            _query = '';
+                            _results = [];
+                          });
+                        },
+                      )
+                    : null,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                filled: true,
+                fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.green.shade200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.green, width: 2),
                 ),
               ),
               textInputAction: TextInputAction.search,
               onSubmitted: _runSearch,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Results for: ${_query.isEmpty ? '(type to search)' : _query}'),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _query.isEmpty 
+                        ? 'Type to search across all items'
+                        : '${_results.length} result${_results.length != 1 ? 's' : ''} for "$_query"',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 8),

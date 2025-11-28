@@ -263,9 +263,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          title: const Text('Edit Profile'),
-          elevation: 0,
+          title: const Text('Edit Profile', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.green,
+          elevation: 2,
           centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
 
       body: SafeArea(
@@ -276,17 +278,89 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Professional Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade700, Colors.green.shade900],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.person, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Update Your Profile',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Keep your information current',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
             // Profile Photo Section
             Card(
-              elevation: 0,
+              elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey[200]!),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
+                    Row(
+                      children: [
+                        Icon(Icons.camera_alt, color: Colors.green.shade700),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Profile Photo',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     Stack(
                       children: [
                         CircleAvatar(
@@ -328,21 +402,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             // Profile Information Section
             Card(
-              elevation: 0,
+              elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey[200]!),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Profile Information',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.green.shade700),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Personal Information',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
                     TextField(
@@ -396,10 +477,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             // Change Password Section
             Card(
-              elevation: 0,
+              elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey[200]!),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -408,12 +488,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.lock_outline, color: theme.colorScheme.primary),
+                        Icon(Icons.lock_outline, color: Colors.green.shade700),
                         const SizedBox(width: 8),
                         Text(
-                          'Change Password',
-                          style: theme.textTheme.titleLarge?.copyWith(
+                          'Security',
+                          style: TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
                           ),
                         ),
                       ],

@@ -68,8 +68,10 @@ class _SeekerHistoryScreenState extends State<SeekerHistoryScreen> {
     return ChatbotWrapper(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('My Requested Items'),
-          elevation: 0,
+          title: const Text('My Requests'),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          elevation: 2,
         ),
         body: SafeArea(
           child: _uid == null
@@ -136,10 +138,50 @@ class _SeekerHistoryScreenState extends State<SeekerHistoryScreen> {
 
                   return Column(
                     children: [
+                      // Header Section
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.green.shade700, Colors.green.shade900],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.history, color: Colors.white, size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Request History',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Track your requested items and their status',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       // Summary Cards
                       Container(
                         padding: const EdgeInsets.all(16),
-                        color: Colors.green.shade50,
+                        color: Colors.grey[50],
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [

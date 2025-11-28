@@ -127,202 +127,308 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
 
     return ChatbotWrapper(
       child: Scaffold(
-        appBar: AppBar(title: const Text('Post a New Item')),
+        appBar: AppBar(
+          title: const Text('Post a New Item'),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          elevation: 2,
+        ),
         body: SafeArea(
           child: _busy
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Image picker / preview
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 56,
-                  backgroundImage: preview,
-                  child: preview == null
-                      ? const Icon(Icons.add_a_photo, size: 40)
-                      : null,
+                  padding: const EdgeInsets.all(0),
+        child: Column(
+          children: [
+            // Header Section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade700, Colors.green.shade900],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _title,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) =>
-                v == null || v.trim().isEmpty ? 'Enter a title' : null,
-              ),
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _desc,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Enter a brief description'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _address,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Pickup Address (Optional)',
-                  hintText: 'Where can seekers pick up this item?',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              DropdownButtonFormField<String>(
-                value: _category,
-                items: const [
-                  DropdownMenuItem(value: 'Electronics', child: Text('📱 Electronics')),
-                  DropdownMenuItem(value: 'Computers & Laptops', child: Text('💻 Computers & Laptops')),
-                  DropdownMenuItem(value: 'Mobile Phones', child: Text('📱 Mobile Phones')),
-                  DropdownMenuItem(value: 'Home & Furniture', child: Text('🏠 Home & Furniture')),
-                  DropdownMenuItem(value: 'Appliances', child: Text('🔌 Appliances')),
-                  DropdownMenuItem(value: 'Books & Education', child: Text('📚 Books & Education')),
-                  DropdownMenuItem(value: 'Sports & Fitness', child: Text('⚽ Sports & Fitness')),
-                  DropdownMenuItem(value: 'Clothing & Fashion', child: Text('👕 Clothing & Fashion')),
-                  DropdownMenuItem(value: 'Toys & Games', child: Text('🎮 Toys & Games')),
-                  DropdownMenuItem(value: 'Kitchen & Dining', child: Text('🍽️ Kitchen & Dining')),
-                  DropdownMenuItem(value: 'Tools & Hardware', child: Text('🔧 Tools & Hardware')),
-                  DropdownMenuItem(value: 'Garden & Outdoor', child: Text('🌿 Garden & Outdoor')),
-                  DropdownMenuItem(value: 'Baby & Kids', child: Text('👶 Baby & Kids')),
-                  DropdownMenuItem(value: 'Health & Beauty', child: Text('💄 Health & Beauty')),
-                  DropdownMenuItem(value: 'Automotive', child: Text('🚗 Automotive')),
-                  DropdownMenuItem(value: 'Pet Supplies', child: Text('🐾 Pet Supplies')),
-                  DropdownMenuItem(value: 'Office Supplies', child: Text('📎 Office Supplies')),
-                  DropdownMenuItem(value: 'Art & Crafts', child: Text('🎨 Art & Crafts')),
-                  DropdownMenuItem(value: 'Musical Instruments', child: Text('🎸 Musical Instruments')),
-                  DropdownMenuItem(value: 'Other', child: Text('📦 Other')),
-                ],
-                onChanged: (v) => setState(() => _category = v),
-                decoration: const InputDecoration(
-                  labelText: 'Category *',
-                  hintText: 'Select item category',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.category),
-                ),
-                validator: (v) => v == null ? 'Please select a category' : null,
-              ),
-              const SizedBox(height: 12),
-
-              DropdownButtonFormField<String>(
-                value: _condition,
-                items: const [
-                  DropdownMenuItem(value: 'Brand New', child: Text('🌟 Brand New - Unopened/Unused')),
-                  DropdownMenuItem(value: 'Like New', child: Text('✨ Like New - Barely Used')),
-                  DropdownMenuItem(value: 'Excellent', child: Text('⭐ Excellent - Minimal Wear')),
-                  DropdownMenuItem(value: 'Good', child: Text('👍 Good - Some Signs of Use')),
-                  DropdownMenuItem(value: 'Fair', child: Text('👌 Fair - Moderate Wear')),
-                  DropdownMenuItem(value: 'Used', child: Text('♻️ Used - Well Used')),
-                  DropdownMenuItem(value: 'For Parts', child: Text('🔧 For Parts/Repair')),
-                ],
-                onChanged: (v) => setState(() => _condition = v),
-                decoration: const InputDecoration(
-                  labelText: 'Condition *',
-                  hintText: 'Select item condition',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.star),
-                ),
-                validator: (v) => v == null ? 'Please select condition' : null,
-              ),
-              const SizedBox(height: 16),
-              
-              // Selling Toggle
-              Card(
-                color: _isSelling ? Colors.orange.shade50 : Colors.green.shade50,
-                child: SwitchListTile(
-                  title: Text(
-                    _isSelling ? 'For Sale' : 'For Donation',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    _isSelling 
-                        ? 'This item will be listed for sale' 
-                        : 'This item will be donated for free',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  value: _isSelling,
-                  activeColor: Colors.orange,
-                  onChanged: (val) => setState(() => _isSelling = val),
-                  secondary: Icon(
-                    _isSelling ? Icons.attach_money : Icons.volunteer_activism,
-                    color: _isSelling ? Colors.orange : Colors.green,
-                  ),
-                ),
-              ),
-              
-              // Price field (only shown when selling)
-              if (_isSelling) ...[
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _price,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Price *',
-                    hintText: 'Enter selling price',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.currency_exchange),
-                    prefixText: '৳ ',
-                    helperText: _condition == 'Brand New' 
-                        ? '💡 Brand new items get a SPECIAL badge!' 
-                        : null,
-                    helperStyle: TextStyle(
-                      color: Colors.amber.shade700,
-                      fontWeight: FontWeight.bold,
+              child: Row(
+                children: [
+                  Icon(Icons.add_circle_outline, color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Share Your Item',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          'Help others by donating or selling items',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  validator: (v) {
-                    if (_isSelling && (v == null || v.trim().isEmpty)) {
-                      return 'Price is required for selling items';
-                    }
-                    if (_isSelling) {
-                      final price = double.tryParse(v!);
-                      if (price == null || price <= 0) {
-                        return 'Enter a valid price greater than 0';
-                      }
-                    }
-                    return null;
-                  },
-                ),
-              ],
-              const SizedBox(height: 20),
+                ],
+              ),
+            ),
+            // Form Content
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Image Section Header
+                    Row(
+                      children: [
+                        Icon(Icons.image, color: Colors.green, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Item Photo',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Image picker / preview
+                    Center(
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.grey[100],
+                            border: Border.all(color: Colors.green, width: 2),
+                            image: preview != null
+                                ? DecorationImage(image: preview, fit: BoxFit.cover)
+                                : null,
+                          ),
+                          child: preview == null
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_a_photo, size: 40, color: Colors.green),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Tap to add photo',
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    ),
+                                  ],
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Basic Info Header
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.green, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Basic Information',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _submit,
-                  icon: Icon(_isSelling ? Icons.sell : Icons.volunteer_activism),
-                  label: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: Text(_isSelling ? 'Post for Sale' : 'Post for Donation'),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _isSelling ? Colors.orange : null,
-                  ),
+                    TextFormField(
+                      controller: _title,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Enter a title' : null,
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextFormField(
+                      controller: _desc,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        labelText: 'Description',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? 'Enter a brief description'
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextFormField(
+                      controller: _address,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Pickup Address (Optional)',
+                        hintText: 'Where can seekers pick up this item?',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.location_on),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    DropdownButtonFormField<String>(
+                      value: _category,
+                      items: const [
+                        DropdownMenuItem(value: 'Electronics', child: Text('📱 Electronics')),
+                        DropdownMenuItem(value: 'Computers & Laptops', child: Text('💻 Computers & Laptops')),
+                        DropdownMenuItem(value: 'Mobile Phones', child: Text('📱 Mobile Phones')),
+                        DropdownMenuItem(value: 'Home & Furniture', child: Text('🏠 Home & Furniture')),
+                        DropdownMenuItem(value: 'Appliances', child: Text('🔌 Appliances')),
+                        DropdownMenuItem(value: 'Books & Education', child: Text('📚 Books & Education')),
+                        DropdownMenuItem(value: 'Sports & Fitness', child: Text('⚽ Sports & Fitness')),
+                        DropdownMenuItem(value: 'Clothing & Fashion', child: Text('👕 Clothing & Fashion')),
+                        DropdownMenuItem(value: 'Toys & Games', child: Text('🎮 Toys & Games')),
+                        DropdownMenuItem(value: 'Kitchen & Dining', child: Text('🍽️ Kitchen & Dining')),
+                        DropdownMenuItem(value: 'Tools & Hardware', child: Text('🔧 Tools & Hardware')),
+                        DropdownMenuItem(value: 'Garden & Outdoor', child: Text('🌿 Garden & Outdoor')),
+                        DropdownMenuItem(value: 'Baby & Kids', child: Text('👶 Baby & Kids')),
+                        DropdownMenuItem(value: 'Health & Beauty', child: Text('💄 Health & Beauty')),
+                        DropdownMenuItem(value: 'Automotive', child: Text('🚗 Automotive')),
+                        DropdownMenuItem(value: 'Pet Supplies', child: Text('🐾 Pet Supplies')),
+                        DropdownMenuItem(value: 'Office Supplies', child: Text('📎 Office Supplies')),
+                        DropdownMenuItem(value: 'Art & Crafts', child: Text('🎨 Art & Crafts')),
+                        DropdownMenuItem(value: 'Musical Instruments', child: Text('🎸 Musical Instruments')),
+                        DropdownMenuItem(value: 'Other', child: Text('📦 Other')),
+                      ],
+                      onChanged: (v) => setState(() => _category = v),
+                      decoration: const InputDecoration(
+                        labelText: 'Category *',
+                        hintText: 'Select item category',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.category),
+                      ),
+                      validator: (v) => v == null ? 'Please select a category' : null,
+                    ),
+                    const SizedBox(height: 12),
+
+                    DropdownButtonFormField<String>(
+                      value: _condition,
+                      items: const [
+                        DropdownMenuItem(value: 'Brand New', child: Text('🌟 Brand New - Unopened/Unused')),
+                        DropdownMenuItem(value: 'Like New', child: Text('✨ Like New - Barely Used')),
+                        DropdownMenuItem(value: 'Excellent', child: Text('⭐ Excellent - Minimal Wear')),
+                        DropdownMenuItem(value: 'Good', child: Text('👍 Good - Some Signs of Use')),
+                        DropdownMenuItem(value: 'Fair', child: Text('👌 Fair - Moderate Wear')),
+                        DropdownMenuItem(value: 'Used', child: Text('♻️ Used - Well Used')),
+                        DropdownMenuItem(value: 'For Parts', child: Text('🔧 For Parts/Repair')),
+                      ],
+                      onChanged: (v) => setState(() => _condition = v),
+                      decoration: const InputDecoration(
+                        labelText: 'Condition *',
+                        hintText: 'Select item condition',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.star),
+                      ),
+                      validator: (v) => v == null ? 'Please select condition' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Selling Toggle
+                    Card(
+                      color: _isSelling ? Colors.orange.shade50 : Colors.green.shade50,
+                      child: SwitchListTile(
+                        title: Text(
+                          _isSelling ? 'For Sale' : 'For Donation',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          _isSelling 
+                              ? 'This item will be listed for sale' 
+                              : 'This item will be donated for free',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        value: _isSelling,
+                        activeColor: Colors.orange,
+                        onChanged: (val) => setState(() => _isSelling = val),
+                        secondary: Icon(
+                          _isSelling ? Icons.attach_money : Icons.volunteer_activism,
+                          color: _isSelling ? Colors.orange : Colors.green,
+                        ),
+                      ),
+                    ),
+                    
+                    // Price field (only shown when selling)
+                    if (_isSelling) ...[
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _price,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Price *',
+                          hintText: 'Enter selling price',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.currency_exchange),
+                          prefixText: '৳ ',
+                          helperText: _condition == 'Brand New' 
+                              ? '💡 Brand new items get a SPECIAL badge!' 
+                              : null,
+                          helperStyle: TextStyle(
+                            color: Colors.amber.shade700,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        validator: (v) {
+                          if (_isSelling && (v == null || v.trim().isEmpty)) {
+                            return 'Price is required for selling items';
+                          }
+                          if (_isSelling) {
+                            final price = double.tryParse(v!);
+                            if (price == null || price <= 0) {
+                              return 'Enter a valid price greater than 0';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _submit,
+                        icon: Icon(_isSelling ? Icons.sell : Icons.volunteer_activism),
+                        label: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Text(_isSelling ? 'Post for Sale' : 'Post for Donation'),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isSelling ? Colors.orange : null,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+                ),
       ),
-        ),
-      ),
+    ),
     );
   }
 }

@@ -80,12 +80,14 @@ class _DonorDashboardState extends State<DonorDashboard> {
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
-        title: const Text('My Donations'),
-        elevation: 0,
+        title: const Text('My Donations', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.green,
+        elevation: 2,
         centerTitle: false,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline),
+            icon: const Icon(Icons.add_circle_outline, color: Colors.white),
             tooltip: 'Post new item',
             onPressed: () => Navigator.pushNamed(context, '/create-item'),
           ),
@@ -111,19 +113,63 @@ class _DonorDashboardState extends State<DonorDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.inventory_2_outlined, color: theme.colorScheme.primary, size: 28),
-                const SizedBox(width: 8),
-                Text(
-                  'My Items',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            // Professional Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade700, Colors.green.shade900],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.inventory_2, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'My Donation Items',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Manage your shared items',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _myItemsStream(),
               builder: (context, snap) {
@@ -208,11 +254,10 @@ class _DonorDashboardState extends State<DonorDashboard> {
                             : (names[oid] ?? '(No name)');
 
                         return Card(
-                          elevation: 0,
+                          elevation: 2,
                           margin: const EdgeInsets.only(bottom: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(color: Colors.grey[200]!),
                           ),
                           child: InkWell(
                             onTap: () {
