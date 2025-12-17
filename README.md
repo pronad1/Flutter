@@ -6,7 +6,6 @@
 [![License](https://img.shields.io/badge/License-Private-red)](LICENSE)
 
 **ReuseHub** is a comprehensive Flutter-based mobile application that connects donors with seekers to facilitate the donation and reuse of items. The platform promotes sustainability by enabling users to give away items they no longer need to those who can benefit from them.
-
 ---
 
 ## 📋 Table of Contents
