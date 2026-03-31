@@ -134,7 +134,3 @@ firebase deploy --only hosting
 ## License
 
 This project is licensed under the MIT License.
-
-## Contact
-
-For questions or support, please open an issue on GitHub.
