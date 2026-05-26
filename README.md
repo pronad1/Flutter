@@ -464,6 +464,4 @@ For questions or support:
 - [ ] Donation history analytics
 
 ---
-
 **Built with ❤️ using Flutter**
-
