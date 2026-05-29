@@ -1,5 +1,4 @@
 # 🤖 ReuseHub AI Assistant - Complete Guide
-
 ## 🎯 Overview
 
 The ReuseHub AI Assistant is a comprehensive, intelligent chatbot that provides real-time information about your app, items, users, and all features. It's been completely enhanced to understand natural language queries and provide context-aware, personalized responses.
