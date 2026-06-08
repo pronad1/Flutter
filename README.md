@@ -462,6 +462,5 @@ For questions or support:
 - [ ] Social media sharing
 - [ ] Item wishlists
 - [ ] Donation history analytics
-
 ---
 **Built with ❤️ using Flutter**
