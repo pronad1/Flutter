@@ -71,26 +71,6 @@
 - **Bottom Navigation**: Easy access to Home, Search, Profile
 - **Splash Screen**: Branded startup experience
 
----
-
-## 🏗️ Architecture
-
-ReuseHub follows a **clean architecture** pattern with clear separation of concerns:
-
-```
-lib/
-├── src/
-│   ├── config/          # App configuration (routes, constants)
-│   ├── models/          # Data models (User, Item, Message, Request)
-│   ├── services/        # Business logic & Firebase/Supabase interactions
-│   ├── providers/       # State management (Provider pattern)
-│   ├── ui/              # User interface components
-│   │   ├── screens/     # Full-page screens
-│   │   └── widgets/     # Reusable UI components
-│   └── utils/           # Helper functions & utilities
-├── firebase_options.dart
-└── main.dart            # App entry point
-```
 
 ### Design Patterns
 - **Provider Pattern**: State management across the app
